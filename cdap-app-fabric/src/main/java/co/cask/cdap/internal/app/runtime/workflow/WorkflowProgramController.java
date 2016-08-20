@@ -16,7 +16,7 @@
 package co.cask.cdap.internal.app.runtime.workflow;
 
 import co.cask.cdap.app.program.Program;
-import co.cask.cdap.internal.app.runtime.AbstractProgramController;
+import co.cask.cdap.internal.app.runtime.ProgramControllerServiceAdapter;
 import com.google.common.util.concurrent.Service;
 import org.apache.twill.api.RunId;
 import org.apache.twill.api.ServiceAnnouncer;
@@ -31,8 +31,7 @@ import java.net.InetSocketAddress;
 /**
  *
  */
-final class WorkflowProgramController extends AbstractProgramController {
-
+final class WorkflowProgramController extends ProgramControllerServiceAdapter {
   private static final Logger LOG = LoggerFactory.getLogger(WorkflowProgramController.class);
 
   private final WorkflowDriver driver;
@@ -41,7 +40,7 @@ final class WorkflowProgramController extends AbstractProgramController {
   private Cancellable cancelAnnounce;
 
   WorkflowProgramController(Program program, WorkflowDriver driver, ServiceAnnouncer serviceAnnouncer, RunId runId) {
-    super(program.getId(), runId);
+    super(driver, program.getId(), runId);
     this.driver = driver;
     this.serviceName = getServiceName(program, runId);
     this.serviceAnnouncer = serviceAnnouncer;
@@ -67,7 +66,7 @@ final class WorkflowProgramController extends AbstractProgramController {
   protected void doCommand(String name, Object value) throws Exception {
     LOG.info("Command ignored {}, {}", name, value);
   }
-  
+
   private void startListen(Service service) {
     // Forward state changes from the given service to this controller.
     service.addListener(new ServiceListenerAdapter() {
@@ -81,13 +80,10 @@ final class WorkflowProgramController extends AbstractProgramController {
 
       @Override
       public void terminated(Service.State from) {
-        LOG.info("Workflow service terminated from {}. Un-registering service {}. getState: {}", from, serviceName,
-                 getState());
-        if (cancelAnnounce != null) {
-          cancelAnnounce.cancel();
-        }
+        LOG.info("Workflow service terminated from {}. Un-registering service {}.", from, serviceName);
+        cancelAnnounce.cancel();
         LOG.info("Service {} unregistered.", serviceName);
-        if (from != Service.State.STOPPING) {
+        if (getState() != State.STOPPING) {
           // service completed itself.
           complete();
         } else {
@@ -113,5 +109,6 @@ final class WorkflowProgramController extends AbstractProgramController {
   private String getServiceName(Program program, RunId runId) {
     return String.format("workflow.%s.%s.%s.%s",
                          program.getNamespaceId(), program.getApplicationId(), program.getName(), runId.getId());
+
   }
 }

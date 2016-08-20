@@ -21,6 +21,7 @@ import co.cask.cdap.api.workflow.WorkflowToken;
 import co.cask.cdap.common.NotFoundException;
 import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.utils.Tasks;
+import co.cask.cdap.proto.ProgramRunStatus;
 import co.cask.cdap.proto.RunRecord;
 import co.cask.cdap.proto.WorkflowTokenNodeDetail;
 import co.cask.cdap.proto.artifact.AppRequest;
@@ -143,7 +144,7 @@ public class WikipediaPipelineAppTest extends TestBase {
     testWorkflow(workflowManager, config, null);
   }
 
-  private void testWorkflow(WorkflowManager workflowManager, WikipediaPipelineApp.WikipediaAppConfig config,
+  private void testWorkflow(final WorkflowManager workflowManager, WikipediaPipelineApp.WikipediaAppConfig config,
                             @Nullable Integer threshold) throws Exception {
     if (threshold == null) {
       workflowManager.start();
@@ -152,7 +153,15 @@ public class WikipediaPipelineAppTest extends TestBase {
         WikipediaPipelineWorkflow.MIN_PAGES_THRESHOLD_KEY, String.valueOf(threshold),
         WikipediaPipelineWorkflow.MODE_KEY, WikipediaPipelineWorkflow.ONLINE_MODE));
     }
-    workflowManager.waitForFinish(5, TimeUnit.MINUTES);
+
+    int numOfRuns = threshold == null ? 1 : 2;
+    Tasks.waitFor(numOfRuns, new Callable<Integer>() {
+      @Override
+      public Integer call() throws Exception {
+        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
+      }
+    }, 300, TimeUnit.SECONDS);
+
     String pid = getLatestPid(workflowManager.getHistory());
     WorkflowTokenNodeDetail tokenAtCondition =
       workflowManager.getTokenAtNode(pid, WikipediaPipelineWorkflow.EnoughDataToProceed.class.getSimpleName(),

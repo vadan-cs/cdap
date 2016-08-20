@@ -107,6 +107,7 @@ public abstract class AbstractProgramController implements ProgramController {
 
   @Override
   public final ListenableFuture<ProgramController> suspend() {
+    LOG.info("CDAP-6008 suspend called.");
     if (!state.compareAndSet(State.ALIVE, State.SUSPENDING)) {
       return Futures.immediateFailedFuture(
         new IllegalStateException("Suspension not allowed for " + programId + " in " + state.get()));
@@ -132,6 +133,7 @@ public abstract class AbstractProgramController implements ProgramController {
 
   @Override
   public final ListenableFuture<ProgramController> resume() {
+    LOG.info("CDAP-6008 resume called.");
     if (!state.compareAndSet(State.SUSPENDED, State.RESUMING)) {
       return Futures.immediateFailedFuture(
         new IllegalStateException("Resumption not allowed for " + name + " in " + state.get()));
@@ -156,6 +158,7 @@ public abstract class AbstractProgramController implements ProgramController {
 
   @Override
   public final ListenableFuture<ProgramController> stop() {
+    LOG.info("CDAP-6008 stop called.");
     if (!state.compareAndSet(State.STARTING, State.STOPPING)
       && !state.compareAndSet(State.ALIVE, State.STOPPING)
       && !state.compareAndSet(State.SUSPENDED, State.STOPPING)) {
@@ -188,6 +191,7 @@ public abstract class AbstractProgramController implements ProgramController {
   }
 
   protected void complete(final State completionState) {
+    LOG.info("CDAP-6008 complete called with completion state {}", completionState);
     if (!state.compareAndSet(State.STARTING, completionState)
       && !state.compareAndSet(State.ALIVE, completionState)
       && !state.compareAndSet(State.SUSPENDED, completionState)) {
