@@ -354,16 +354,9 @@ public class TestFrameworkTestRun extends TestFrameworkTestBase {
       }
     }, 5, TimeUnit.SECONDS, 10, TimeUnit.MILLISECONDS);
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(AppWithPlugin.WORKFLOW);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(AppWithPlugin.WORKFLOW);
     workflowManager.start();
-
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 600, TimeUnit.SECONDS);
-
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
     List<RunRecord> runRecords = workflowManager.getHistory();
     Assert.assertNotEquals(ProgramRunStatus.FAILED, runRecords.get(0).getStatus());
     DataSetManager<KeyValueTable> workflowTableManager = getDataset(AppWithPlugin.WORKFLOW_TABLE);
@@ -560,17 +553,11 @@ public class TestFrameworkTestRun extends TestFrameworkTestBase {
     File firstFile = new File(TMP_FOLDER.newFolder() + "/first");
     File firstFileDone = new File(TMP_FOLDER.newFolder() + "/first.done");
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(WorkflowStatusTestApp.WORKFLOW_NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(WorkflowStatusTestApp.WORKFLOW_NAME);
     workflowManager.start(ImmutableMap.of("workflow.success.file", workflowSuccess.getAbsolutePath(),
                                           "action.success.file", actionSuccess.getAbsolutePath(),
                                           "throw.exception", "true"));
-
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.FAILED).size();
-      }
-    }, 60, TimeUnit.SECONDS);
+    workflowManager.waitForRun(ProgramRunStatus.FAILED, 1, TimeUnit.MINUTES);
 
     // Since action and workflow failed the files should not exist
     Assert.assertFalse(workflowSuccess.exists());
@@ -578,14 +565,7 @@ public class TestFrameworkTestRun extends TestFrameworkTestBase {
 
     workflowManager.start(ImmutableMap.of("workflow.success.file", workflowSuccess.getAbsolutePath(),
                                           "action.success.file", actionSuccess.getAbsolutePath()));
-
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 60, TimeUnit.SECONDS);
-
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 1, TimeUnit.MINUTES);
     Assert.assertTrue(workflowSuccess.exists());
     Assert.assertTrue(actionSuccess.exists());
 
@@ -596,14 +576,7 @@ public class TestFrameworkTestRun extends TestFrameworkTestBase {
                                           "test.killed", "true"));
     verifyFileExists(Lists.newArrayList(firstFile));
     workflowManager.stop();
-
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.KILLED).size();
-      }
-    }, 60, TimeUnit.SECONDS);
-
+    workflowManager.waitForRun(ProgramRunStatus.KILLED, 1, TimeUnit.MINUTES);
     Assert.assertTrue(workflowKilled.exists());
   }
 
@@ -617,15 +590,8 @@ public class TestFrameworkTestRun extends TestFrameworkTestBase {
     ServiceManager serviceManager = appManager.getServiceManager(DatasetWithCustomActionApp.CUSTOM_SERVICE).start();
     serviceManager.waitForStatus(true);
 
-    final WorkflowManager workflowManager
-      = appManager.getWorkflowManager(DatasetWithCustomActionApp.CUSTOM_WORKFLOW).start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 120, TimeUnit.SECONDS);
-
+    WorkflowManager workflowManager = appManager.getWorkflowManager(DatasetWithCustomActionApp.CUSTOM_WORKFLOW).start();
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 2, TimeUnit.MINUTES);
     appManager.stopAll();
 
     DataSetManager<KeyValueTable> outTableManager = getDataset(DatasetWithCustomActionApp.CUSTOM_TABLE);

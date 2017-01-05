@@ -120,38 +120,35 @@ public class DataPipelineTest extends HydratorTestBase {
   }
 
   public void testMacroEvaluationActionPipeline(Engine engine) throws Exception {
+    ETLStage action1 = new ETLStage("action1", MockAction.getPlugin("actionTable", "action1.row", "action1.column",
+                                                                    "${value}"));
+    ETLStage action2 = new ETLStage("action2", MockAction.getPlugin("actionTable", "action2.row", "action2.column",
+                                                                    "action2.value"));
 
+    ETLBatchConfig etlConfig = co.cask.cdap.etl.proto.v2.ETLBatchConfig.builder("* * * * *")
+      .addStage(action1)
+      .addStage(action2)
+      .addConnection(new Connection(action1.getName(), action2.getName()))
+      .setEngine(engine)
+      .build();
 
-      ETLStage action1 = new ETLStage("action1", MockAction.getPlugin("actionTable", "action1.row", "action1.column",
-                                                                               "${value}"));
-      ETLStage action2 = new ETLStage("action2", MockAction.getPlugin("actionTable", "action2.row", "action2.column",
-                                                                     "action2.value"));
+    // set runtime arguments for macro substitution
+    Map<String, String> runtimeArguments = ImmutableMap.of("value", "macroValue");
 
-      ETLBatchConfig etlConfig = co.cask.cdap.etl.proto.v2.ETLBatchConfig.builder("* * * * *")
-        .addStage(action1)
-        .addStage(action2)
-        .addConnection(new Connection(action1.getName(), action2.getName()))
-        .setEngine(engine)
-        .build();
+    AppRequest<co.cask.cdap.etl.proto.v2.ETLBatchConfig> appRequest =
+      new AppRequest<>(APP_ARTIFACT, etlConfig);
+    ApplicationId appId = NamespaceId.DEFAULT.app("macroActionTest");
+    ApplicationManager appManager = deployApplication(appId, appRequest);
+    WorkflowManager manager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    manager.setRuntimeArgs(runtimeArguments);
+    manager.start(ImmutableMap.of("logical.start.time", "0"));
+    manager.waitForRun(ProgramRunStatus.COMPLETED, 3, TimeUnit.MINUTES);
 
-      // set runtime arguments for macro substitution
-      Map<String, String> runtimeArguments = ImmutableMap.of("value", "macroValue");
+    DataSetManager<Table> actionTableDS = getDataset("actionTable");
+    Assert.assertEquals("macroValue", MockAction.readOutput(actionTableDS, "action1.row", "action1.column"));
 
-      AppRequest<co.cask.cdap.etl.proto.v2.ETLBatchConfig> appRequest =
-        new AppRequest<>(APP_ARTIFACT, etlConfig);
-      ApplicationId appId = NamespaceId.DEFAULT.app("macroActionTest");
-      ApplicationManager appManager = deployApplication(appId, appRequest);
-      WorkflowManager manager = appManager.getWorkflowManager(SmartWorkflow.NAME);
-      manager.setRuntimeArgs(runtimeArguments);
-      manager.start(ImmutableMap.of("logical.start.time", "0"));
-      manager.waitForFinish(3, TimeUnit.MINUTES);
-
-      DataSetManager<Table> actionTableDS = getDataset("actionTable");
-      Assert.assertEquals("macroValue", MockAction.readOutput(actionTableDS, "action1.row", "action1.column"));
-
-      appManager.getHistory(appId.workflow(SmartWorkflow.NAME).toId(), ProgramRunStatus.FAILED);
+    appManager.getHistory(appId.workflow(SmartWorkflow.NAME).toId(), ProgramRunStatus.FAILED);
   }
-
 
   @Test
   public void testPipelineWithAllActions() throws Exception {
@@ -182,15 +179,9 @@ public class DataPipelineTest extends HydratorTestBase {
     ApplicationId appId = NamespaceId.DEFAULT.app("MyActionOnlyApp");
     ApplicationManager appManager = deployApplication(appId.toId(), appRequest);
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start();
-
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     DataSetManager<Table> actionTableDS = getDataset(actionTable);
     Assert.assertEquals(action1Value, MockAction.readOutput(actionTableDS, action1RowKey, action1ColumnKey));
@@ -278,15 +269,9 @@ public class DataPipelineTest extends HydratorTestBase {
     DataSetManager<Table> inputManager = getDataset(NamespaceId.DEFAULT.dataset(sourceTableName));
     MockSource.writeInput(inputManager, ImmutableList.of(recordSamuel, recordBob));
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start();
-
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     // check sink
     DataSetManager<Table> sinkManager = getDataset(sinkTableName);
@@ -329,14 +314,9 @@ public class DataPipelineTest extends HydratorTestBase {
     DataSetManager<Table> inputManager = getDataset(NamespaceId.DEFAULT.dataset("singleInput"));
     MockSource.writeInput(inputManager, ImmutableList.of(recordSamuel, recordBob));
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     // check sink
     DataSetManager<Table> sinkManager = getDataset("singleOutput");
@@ -396,14 +376,9 @@ public class DataPipelineTest extends HydratorTestBase {
     inputManager = getDataset(NamespaceId.DEFAULT.dataset(source2Name));
     MockSource.writeInput(inputManager, ImmutableList.of(recordBob));
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     // check sink
     DataSetManager<Table> sinkManager = getDataset(sinkName);
@@ -481,15 +456,9 @@ public class DataPipelineTest extends HydratorTestBase {
     inputManager = getDataset(NamespaceId.DEFAULT.dataset(source3Name));
     MockSource.writeInput(inputManager, ImmutableList.of(recordJane));
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
-
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     // sink1 should get records from source1 and source2
     DataSetManager<Table> sinkManager = getDataset(sink1Name);
@@ -572,15 +541,9 @@ public class DataPipelineTest extends HydratorTestBase {
     DataSetManager<Table> inputManager = getDataset(NamespaceId.DEFAULT.dataset(sourceName));
     MockSource.writeInput(inputManager, ImmutableList.of(recordSamuel, recordBob, recordJane));
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
-
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     // check output
     DataSetManager<Table> sinkManager = getDataset(sinkName);
@@ -647,15 +610,9 @@ public class DataPipelineTest extends HydratorTestBase {
       StructuredRecord.builder(inputSchema).set("user", "john").set("item", 4L).build(),
       StructuredRecord.builder(inputSchema).set("user", "john").set("item", 3L).build()));
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
-
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     Schema outputSchema1 = Schema.recordOf(
       "user.count",
@@ -734,15 +691,9 @@ public class DataPipelineTest extends HydratorTestBase {
     DataSetManager<Table> inputManager = getDataset(NamespaceId.DEFAULT.dataset("actionInput"));
     MockSource.writeInput(inputManager, ImmutableList.of(recordSamuel, recordBob, recordJane));
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
-
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     DataSetManager<Table> tokenTableManager = getDataset(NamespaceId.DEFAULT.dataset("tokenTable"));
     Table tokenTable = tokenTableManager.get();
@@ -807,14 +758,9 @@ public class DataPipelineTest extends HydratorTestBase {
     textsToClassify.send("genuine report");
 
     // manually trigger the pipeline
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     DataSetManager<KeyValueTable> classifiedTexts = getDataset(NaiveBayesTrainer.CLASSIFIED_TEXTS);
 
@@ -865,15 +811,9 @@ public class DataPipelineTest extends HydratorTestBase {
     MockSource.writeInput(inputManager, messagesToWrite);
 
     // manually trigger the pipeline
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
-
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     DataSetManager<Table> classifiedTexts = getDataset(classifiedTextsTable);
     List<StructuredRecord> structuredRecords = MockSink.readOutput(classifiedTexts);
@@ -1003,14 +943,9 @@ public class DataPipelineTest extends HydratorTestBase {
     inputManager = getDataset(NamespaceId.DEFAULT.dataset(input3Name));
     MockSource.writeInput(inputManager, ImmutableList.of(recordTrasCar, recordTrasBike));
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     StructuredRecord joinRecordSamuel = StructuredRecord.builder(outSchema)
       .set("customer_id", "1").set("customer_name", "samuel")
@@ -1139,14 +1074,9 @@ public class DataPipelineTest extends HydratorTestBase {
     inputManager = getDataset(NamespaceId.DEFAULT.dataset(input3Name));
     MockSource.writeInput(inputManager, ImmutableList.of(recordTrasCar, recordTrasPlane, recordTrasBike));
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     StructuredRecord joinRecordSamuel = StructuredRecord.builder(outSchema)
       .set("customer_id", "1").set("customer_name", "samuel")
@@ -1300,14 +1230,9 @@ public class DataPipelineTest extends HydratorTestBase {
     inputManager = getDataset(NamespaceId.DEFAULT.dataset(source3MultiJoinInput));
     MockSource.writeInput(inputManager, ImmutableList.of(recordTrasCar, recordTrasBike, recordTrasPlane));
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     StructuredRecord joinRecordSamuel = StructuredRecord.builder(outSchema2)
       .set("customer_id", "1").set("customer_name", "samuel")
@@ -1363,19 +1288,14 @@ public class DataPipelineTest extends HydratorTestBase {
     ApplicationId appId = NamespaceId.DEFAULT.app("App");
     ApplicationManager appManager = deployApplication(appId.toId(), appRequest);
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
 
     // make sure the datasets don't exist beforehand
     Assert.assertNull(getDataset(prefix + "MockSecureSourceDataset").get());
     Assert.assertNull(getDataset(prefix + "MockSecureSinkDataset").get());
 
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     // now the datasets should exist
     Assert.assertNotNull(getDataset(prefix + "MockSecureSourceDataset").get());
@@ -1453,15 +1373,9 @@ public class DataPipelineTest extends HydratorTestBase {
     // Create input files
     MockExternalSource.writeInput(new File(inputDir, inputFile).getAbsolutePath(), allInput);
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.start();
-    // make sure the completed run record is stamped, before asserting it.
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 5, TimeUnit.MINUTES);
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
     List<RunRecord> history = workflowManager.getHistory();
     // there should be only one completed run
     Assert.assertEquals(1, history.size());
@@ -1506,16 +1420,10 @@ public class DataPipelineTest extends HydratorTestBase {
     Assert.assertNull(getDataset("mockRuntimeMRSourceDataset").get());
     Assert.assertNull(getDataset("mockRuntimeMRSinkDataset").get());
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.setRuntimeArgs(runtimeArguments);
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
-
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     // now the datasets should exist
     Assert.assertNotNull(getDataset("mockRuntimeMRSourceDataset").get());
@@ -1550,7 +1458,7 @@ public class DataPipelineTest extends HydratorTestBase {
                                                            "runtimeSource",
                                                            "mockRuntimeSparkSourceDataset");
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     workflowManager.setRuntimeArgs(runtimeArguments);
 
     // make sure the datasets don't exist beforehand
@@ -1558,13 +1466,7 @@ public class DataPipelineTest extends HydratorTestBase {
     Assert.assertNull(getDataset("mockRuntimeSparkSinkDataset").get());
 
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
-
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
 
     // now the datasets should exist
     Assert.assertNotNull(getDataset("mockRuntimeSparkSourceDataset").get());
@@ -1598,7 +1500,7 @@ public class DataPipelineTest extends HydratorTestBase {
                                                            "source", "Source",
                                                            "runtimeSource", "mockRuntimeSourceDataset");
 
-    final WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
+    WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
 
     // make sure the datasets were created at configure time
     Assert.assertNotNull(getDataset("configTimeMockSourceDataset").get());
@@ -1606,12 +1508,7 @@ public class DataPipelineTest extends HydratorTestBase {
 
     workflowManager.setRuntimeArgs(runtimeArguments);
     workflowManager.start();
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
+    workflowManager.waitForRun(ProgramRunStatus.COMPLETED, 5, TimeUnit.MINUTES);
   }
 
   private void validateMetric(long expected, ApplicationId appId,

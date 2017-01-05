@@ -143,7 +143,6 @@ public class WorkflowProgramRunner extends AbstractProgramRunnerWithPlugin {
       controller.addListener(new AbstractListener() {
         @Override
         public void init(ProgramController.State state, @Nullable Throwable cause) {
-          LOG.info("CDAP-6008 init called");
           // Get start time from RunId
           long startTimeInSeconds = RunIds.getTime(controller.getRunId(), TimeUnit.SECONDS);
           if (startTimeInSeconds == -1) {
@@ -181,9 +180,6 @@ public class WorkflowProgramRunner extends AbstractProgramRunnerWithPlugin {
 
         @Override
         public void killed() {
-          for (StackTraceElement ste : Thread.currentThread().getStackTrace()) {
-            LOG.info("{}", ste);
-          }
           LOG.debug("Program {} killed.", program.getId());
           runtimeStore.setStop(program.getId(), runId.getId(),
                                TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis()),

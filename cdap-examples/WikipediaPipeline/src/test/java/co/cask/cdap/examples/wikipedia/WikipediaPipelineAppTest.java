@@ -144,7 +144,7 @@ public class WikipediaPipelineAppTest extends TestBase {
     testWorkflow(workflowManager, config, null);
   }
 
-  private void testWorkflow(final WorkflowManager workflowManager, WikipediaPipelineApp.WikipediaAppConfig config,
+  private void testWorkflow(WorkflowManager workflowManager, WikipediaPipelineApp.WikipediaAppConfig config,
                             @Nullable Integer threshold) throws Exception {
     if (threshold == null) {
       workflowManager.start();
@@ -155,13 +155,7 @@ public class WikipediaPipelineAppTest extends TestBase {
     }
 
     int numOfRuns = threshold == null ? 1 : 2;
-    Tasks.waitFor(numOfRuns, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return workflowManager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 300, TimeUnit.SECONDS);
-
+    workflowManager.waitForRuns(ProgramRunStatus.COMPLETED, numOfRuns, 5, TimeUnit.MINUTES);
     String pid = getLatestPid(workflowManager.getHistory());
     WorkflowTokenNodeDetail tokenAtCondition =
       workflowManager.getTokenAtNode(pid, WikipediaPipelineWorkflow.EnoughDataToProceed.class.getSimpleName(),

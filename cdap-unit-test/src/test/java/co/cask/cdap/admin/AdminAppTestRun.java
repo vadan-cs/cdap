@@ -24,7 +24,6 @@ import co.cask.cdap.api.dataset.table.Get;
 import co.cask.cdap.api.dataset.table.Put;
 import co.cask.cdap.api.dataset.table.Table;
 import co.cask.cdap.common.conf.Constants;
-import co.cask.cdap.common.utils.Tasks;
 import co.cask.cdap.internal.guava.reflect.TypeToken;
 import co.cask.cdap.proto.ProgramRunStatus;
 import co.cask.cdap.test.ApplicationManager;
@@ -51,7 +50,6 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -131,7 +129,7 @@ public class AdminAppTestRun extends TestFrameworkTestBase {
   }
 
   private <T extends ProgramManager<T>>
-  void testAdminProgram(final ProgramManager<T> manager) throws Exception {
+  void testAdminProgram(ProgramManager<T> manager) throws Exception {
 
     // create fileset b; it will be updated by the worker
     addDatasetInstance(FileSet.class.getName(), "b", FileSetProperties
@@ -155,13 +153,7 @@ public class AdminAppTestRun extends TestFrameworkTestBase {
     File newBasePath = new File(TMP_FOLDER.newFolder(), "extra");
     Assert.assertFalse(newBasePath.exists());
     manager.start(ImmutableMap.of("new.base.path", newBasePath.getPath()));
-
-    Tasks.waitFor(1, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return manager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 30, TimeUnit.SECONDS);
+    manager.waitForRun(ProgramRunStatus.COMPLETED, 30, TimeUnit.SECONDS);
 
     // validate that worker created dataset a
     DataSetManager<Table> aManager = getDataset("a");
@@ -186,13 +178,7 @@ public class AdminAppTestRun extends TestFrameworkTestBase {
 
     // run the worker again to drop all datasets
     manager.start(ImmutableMap.of("dropAll", "true"));
-
-    Tasks.waitFor(2, new Callable<Integer>() {
-      @Override
-      public Integer call() throws Exception {
-        return manager.getHistory(ProgramRunStatus.COMPLETED).size();
-      }
-    }, 30, TimeUnit.SECONDS);
+    manager.waitForRuns(ProgramRunStatus.COMPLETED, 2, 30, TimeUnit.SECONDS);
 
     Assert.assertNull(getDataset("a").get());
     Assert.assertNull(getDataset("b").get());
