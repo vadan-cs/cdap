@@ -79,7 +79,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
@@ -901,7 +900,7 @@ public class DataPipelineTest extends HydratorTestBase {
       .build();
 
     AppRequest<ETLBatchConfig> appRequest = new AppRequest<>(APP_ARTIFACT, etlConfig);
-    ApplicationId appId = NamespaceId.DEFAULT.app("JoinerApp-" + engine);
+    ApplicationId appId = NamespaceId.DEFAULT.app("InnerJoinApp-" + engine);
     ApplicationManager appManager = deployApplication(appId.toId(), appRequest);
 
     Schema outSchema = Schema.recordOf(
@@ -1029,7 +1028,7 @@ public class DataPipelineTest extends HydratorTestBase {
       .build();
 
     AppRequest<ETLBatchConfig> appRequest = new AppRequest<>(APP_ARTIFACT, etlConfig);
-    ApplicationId appId = NamespaceId.DEFAULT.app("JoinerApp-" + engine);
+    ApplicationId appId = NamespaceId.DEFAULT.app("OuterJoinApp-" + engine);
     ApplicationManager appManager = deployApplication(appId.toId(), appRequest);
 
     Schema outSchema = Schema.recordOf(
@@ -1284,7 +1283,7 @@ public class DataPipelineTest extends HydratorTestBase {
                                           "secure dataset name", new HashMap<String, String>());
 
     AppRequest<ETLBatchConfig> appRequest = new AppRequest<>(APP_ARTIFACT, etlConfig);
-    ApplicationId appId = NamespaceId.DEFAULT.app("App");
+    ApplicationId appId = NamespaceId.DEFAULT.app("App-" + engine);
     ApplicationManager appManager = deployApplication(appId.toId(), appRequest);
 
     WorkflowManager workflowManager = appManager.getWorkflowManager(SmartWorkflow.NAME);
