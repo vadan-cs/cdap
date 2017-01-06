@@ -24,7 +24,6 @@ import co.cask.cdap.api.dataset.table.Table;
 import co.cask.cdap.api.workflow.NodeStatus;
 import co.cask.cdap.api.workflow.WorkflowToken;
 import co.cask.cdap.common.conf.Constants;
-import co.cask.cdap.common.utils.Tasks;
 import co.cask.cdap.datapipeline.mock.NaiveBayesClassifier;
 import co.cask.cdap.datapipeline.mock.NaiveBayesTrainer;
 import co.cask.cdap.datapipeline.mock.SpamMessage;
@@ -137,7 +136,7 @@ public class DataPipelineTest extends HydratorTestBase {
 
     AppRequest<co.cask.cdap.etl.proto.v2.ETLBatchConfig> appRequest =
       new AppRequest<>(APP_ARTIFACT, etlConfig);
-    ApplicationId appId = NamespaceId.DEFAULT.app("macroActionTest");
+    ApplicationId appId = NamespaceId.DEFAULT.app("macroActionTest-" + engine);
     ApplicationManager appManager = deployApplication(appId, appRequest);
     WorkflowManager manager = appManager.getWorkflowManager(SmartWorkflow.NAME);
     manager.setRuntimeArgs(runtimeArguments);
@@ -254,7 +253,7 @@ public class DataPipelineTest extends HydratorTestBase {
       .build();
 
     AppRequest<ETLBatchConfig> appRequest = new AppRequest<>(APP_ARTIFACT, etlConfig);
-    ApplicationId appId = NamespaceId.DEFAULT.app("MyApp");
+    ApplicationId appId = NamespaceId.DEFAULT.app("MyApp-" + engine);
     ApplicationManager appManager = deployApplication(appId.toId(), appRequest);
 
 
@@ -358,7 +357,7 @@ public class DataPipelineTest extends HydratorTestBase {
 
 
     AppRequest<ETLBatchConfig> appRequest = new AppRequest<>(APP_ARTIFACT, etlConfig);
-    ApplicationId appId = NamespaceId.DEFAULT.app("SimpleMultiSourceApp");
+    ApplicationId appId = NamespaceId.DEFAULT.app("SimpleMultiSourceApp-" + engine);
     ApplicationManager appManager = deployApplication(appId.toId(), appRequest);
 
     // there should be only two programs - one workflow and one mapreduce/spark
@@ -434,7 +433,7 @@ public class DataPipelineTest extends HydratorTestBase {
       .build();
 
     AppRequest<ETLBatchConfig> appRequest = new AppRequest<>(APP_ARTIFACT, etlConfig);
-    ApplicationId appId = NamespaceId.DEFAULT.app("MultiSourceApp");
+    ApplicationId appId = NamespaceId.DEFAULT.app("MultiSourceApp-" + engine);
     ApplicationManager appManager = deployApplication(appId.toId(), appRequest);
 
     // there should be only two programs - one workflow and one mapreduce/spark
@@ -525,7 +524,7 @@ public class DataPipelineTest extends HydratorTestBase {
       .build();
 
     AppRequest<ETLBatchConfig> appRequest = new AppRequest<>(APP_ARTIFACT, etlConfig);
-    ApplicationId appId = NamespaceId.DEFAULT.app("LinearAggApp");
+    ApplicationId appId = NamespaceId.DEFAULT.app("LinearAggApp-" + engine);
     ApplicationManager appManager = deployApplication(appId.toId(), appRequest);
 
     Schema schema = Schema.recordOf(
@@ -590,7 +589,7 @@ public class DataPipelineTest extends HydratorTestBase {
       .build();
 
     AppRequest<ETLBatchConfig> appRequest = new AppRequest<>(APP_ARTIFACT, etlConfig);
-    ApplicationId appId = NamespaceId.DEFAULT.app("ParallelAggApp");
+    ApplicationId appId = NamespaceId.DEFAULT.app("ParallelAggApp-" + engine);
     ApplicationManager appManager = deployApplication(appId.toId(), appRequest);
     Schema inputSchema = Schema.recordOf(
       "testRecord",
@@ -902,7 +901,7 @@ public class DataPipelineTest extends HydratorTestBase {
       .build();
 
     AppRequest<ETLBatchConfig> appRequest = new AppRequest<>(APP_ARTIFACT, etlConfig);
-    ApplicationId appId = NamespaceId.DEFAULT.app("JoinerApp");
+    ApplicationId appId = NamespaceId.DEFAULT.app("JoinerApp-" + engine);
     ApplicationManager appManager = deployApplication(appId.toId(), appRequest);
 
     Schema outSchema = Schema.recordOf(
@@ -1030,7 +1029,7 @@ public class DataPipelineTest extends HydratorTestBase {
       .build();
 
     AppRequest<ETLBatchConfig> appRequest = new AppRequest<>(APP_ARTIFACT, etlConfig);
-    ApplicationId appId = NamespaceId.DEFAULT.app("JoinerApp");
+    ApplicationId appId = NamespaceId.DEFAULT.app("JoinerApp-" + engine);
     ApplicationManager appManager = deployApplication(appId.toId(), appRequest);
 
     Schema outSchema = Schema.recordOf(
@@ -1200,7 +1199,7 @@ public class DataPipelineTest extends HydratorTestBase {
       .build();
 
     AppRequest<ETLBatchConfig> appRequest = new AppRequest<>(APP_ARTIFACT, etlConfig);
-    ApplicationId appId = NamespaceId.DEFAULT.app("JoinerApp");
+    ApplicationId appId = NamespaceId.DEFAULT.app("JoinerApp-" + engine);
     ApplicationManager appManager = deployApplication(appId.toId(), appRequest);
 
     StructuredRecord recordSamuel = StructuredRecord.builder(inputSchema1).set("customer_id", "1")
