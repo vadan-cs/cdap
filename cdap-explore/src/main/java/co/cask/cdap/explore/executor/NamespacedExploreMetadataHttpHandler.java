@@ -17,6 +17,7 @@
 package co.cask.cdap.explore.executor;
 
 import co.cask.cdap.common.conf.Constants;
+import co.cask.cdap.common.security.AuditPolicy;
 import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.explore.service.ExploreException;
 import co.cask.cdap.explore.service.ExploreService;
@@ -107,6 +108,7 @@ public class NamespacedExploreMetadataHttpHandler extends AbstractExploreMetadat
 
   @POST
   @Path("jdbc/tables")
+  @AuditPolicy(requestBody = true)
   public void getJDBCTables(HttpRequest request, HttpResponder responder,
                             @PathParam("namespace-id") final String namespaceId) throws ExploreException, IOException {
     handleResponseEndpointExecution(request, responder, new EndpointCoreExecution<QueryHandle>() {
@@ -123,6 +125,7 @@ public class NamespacedExploreMetadataHttpHandler extends AbstractExploreMetadat
 
   @POST
   @Path("jdbc/columns")
+  @AuditPolicy(requestBody = true)
   public void getJDBCColumns(HttpRequest request, HttpResponder responder,
                              @PathParam("namespace-id") final String namespaceId) throws ExploreException, IOException {
     handleResponseEndpointExecution(request, responder, new EndpointCoreExecution<QueryHandle>() {
@@ -139,6 +142,7 @@ public class NamespacedExploreMetadataHttpHandler extends AbstractExploreMetadat
 
   @POST
   @Path("jdbc/schemas")
+  @AuditPolicy(requestBody = true)
   public void getJDBCSchemas(HttpRequest request, HttpResponder responder,
                              @PathParam("namespace-id") final String namespaceId) throws ExploreException, IOException {
     handleResponseEndpointExecution(request, responder, new EndpointCoreExecution<QueryHandle>() {
@@ -154,6 +158,7 @@ public class NamespacedExploreMetadataHttpHandler extends AbstractExploreMetadat
 
   @POST
   @Path("jdbc/functions")
+  @AuditPolicy(requestBody = true)
   public void getJDBCFunctions(HttpRequest request, HttpResponder responder,
                                @PathParam("namespace-id") final String namespaceId)
     throws ExploreException, IOException {

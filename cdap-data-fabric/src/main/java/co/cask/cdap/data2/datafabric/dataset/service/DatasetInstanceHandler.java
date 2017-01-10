@@ -20,6 +20,7 @@ import co.cask.cdap.common.DatasetAlreadyExistsException;
 import co.cask.cdap.common.DatasetTypeNotFoundException;
 import co.cask.cdap.common.HandlerException;
 import co.cask.cdap.common.conf.Constants;
+import co.cask.cdap.common.security.AuditPolicy;
 import co.cask.cdap.data2.datafabric.dataset.service.executor.DatasetAdminOpResponse;
 import co.cask.cdap.internal.guava.reflect.TypeToken;
 import co.cask.cdap.proto.DatasetInstanceConfiguration;
@@ -95,6 +96,7 @@ public class DatasetInstanceHandler extends AbstractHttpHandler {
    */
   @PUT
   @Path("/data/datasets/{name}")
+  @AuditPolicy(requestBody = true)
   public void create(HttpRequest request, HttpResponder responder, @PathParam("namespace-id") String namespaceId,
                      @PathParam("name") String name) throws Exception {
 
@@ -131,6 +133,7 @@ public class DatasetInstanceHandler extends AbstractHttpHandler {
    */
   @PUT
   @Path("/data/datasets/{name}/properties")
+  @AuditPolicy(requestBody = true)
   public void update(HttpRequest request, HttpResponder responder,
                      @PathParam("namespace-id") String namespaceId,
                      @PathParam("name") String name) throws Exception {

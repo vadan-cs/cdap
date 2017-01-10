@@ -17,6 +17,7 @@
 package co.cask.cdap.gateway.handlers;
 
 import co.cask.cdap.common.conf.Constants;
+import co.cask.cdap.common.security.AuditPolicy;
 import co.cask.cdap.config.Config;
 import co.cask.cdap.config.ConfigNotFoundException;
 import co.cask.cdap.config.ConsoleSettingsStore;
@@ -93,6 +94,7 @@ public class ConsoleSettingsHttpHandler extends AbstractHttpHandler {
 
   @Path("/")
   @PUT
+  @AuditPolicy(requestBody = true)
   public void set(HttpRequest request, HttpResponder responder) throws Exception {
     String data = request.getContent().toString(Charsets.UTF_8);
     if (!isValidJSON(data)) {

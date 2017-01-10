@@ -33,9 +33,11 @@ import co.cask.cdap.common.http.AbstractBodyConsumer;
 import co.cask.cdap.common.io.CaseInsensitiveEnumTypeAdapterFactory;
 import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.common.namespace.NamespacedLocationFactory;
+import co.cask.cdap.common.security.AuditPolicy;
 import co.cask.cdap.common.utils.DirUtils;
 import co.cask.cdap.gateway.handlers.util.AbstractAppFabricHttpHandler;
 import co.cask.cdap.internal.app.deploy.ProgramTerminator;
+import co.cask.cdap.internal.app.deploy.pipeline.ApplicationWithPrograms;
 import co.cask.cdap.internal.app.runtime.artifact.WriteConflictException;
 import co.cask.cdap.internal.app.runtime.schedule.Scheduler;
 import co.cask.cdap.internal.app.services.ApplicationLifecycleService;
@@ -129,6 +131,7 @@ public class AppLifecycleHttpHandler extends AbstractAppFabricHttpHandler {
    */
   @PUT
   @Path("/apps/{app-id}")
+  @AuditPolicy(requestBody = true)
   public BodyConsumer create(HttpRequest request, HttpResponder responder,
                              @PathParam("namespace-id") final String namespaceId,
                              @PathParam("app-id") final String appId)
@@ -149,6 +152,7 @@ public class AppLifecycleHttpHandler extends AbstractAppFabricHttpHandler {
    */
   @POST
   @Path("/apps")
+  @AuditPolicy(responseBody = true)
   public BodyConsumer deploy(HttpRequest request, HttpResponder responder,
                              @PathParam("namespace-id") final String namespaceId,
                              @HeaderParam(ARCHIVE_NAME_HEADER) final String archiveName,
@@ -171,6 +175,7 @@ public class AppLifecycleHttpHandler extends AbstractAppFabricHttpHandler {
    */
   @POST
   @Path("/apps/{app-id}/versions/{version-id}/create")
+  @AuditPolicy(requestBody = true)
   public BodyConsumer createAppVersion(HttpRequest request, HttpResponder responder,
                                          @PathParam("namespace-id") final String namespaceId,
                                          @PathParam("app-id") final String appId,
@@ -316,6 +321,7 @@ public class AppLifecycleHttpHandler extends AbstractAppFabricHttpHandler {
    */
   @POST
   @Path("/apps/{app-id}/update")
+  @AuditPolicy(requestBody = true)
   public void updateApp(HttpRequest request, HttpResponder responder,
                         @PathParam("namespace-id") final String namespaceId,
                         @PathParam("app-id") final String appName)
@@ -369,9 +375,12 @@ public class AppLifecycleHttpHandler extends AbstractAppFabricHttpHandler {
 
           // if we don't null check, it gets serialized to "null"
           String configString = appRequest.getConfig() == null ? null : GSON.toJson(appRequest.getConfig());
-          applicationLifecycleService.deployApp(appId.getParent(), appId.getApplication(), appId.getVersion(),
-                                                artifactId, configString, createProgramTerminator());
-          responder.sendString(HttpResponseStatus.OK, "Deploy Complete");
+          ApplicationWithPrograms applicationWithPrograms =
+            applicationLifecycleService.deployApp(appId.getParent(), appId.getApplication(), appId.getVersion(),
+                                                  artifactId, configString, createProgramTerminator());
+          responder.sendString(HttpResponseStatus.OK,
+                               String.format("Successfully deployed app %s",
+                                             applicationWithPrograms.getApplicationId().getApplication()));
         } catch (ArtifactNotFoundException e) {
           responder.sendString(HttpResponseStatus.NOT_FOUND, e.getMessage());
         } catch (InvalidArtifactException e) {

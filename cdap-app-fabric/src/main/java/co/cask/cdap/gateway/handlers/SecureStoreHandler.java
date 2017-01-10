@@ -21,6 +21,7 @@ import co.cask.cdap.api.security.store.SecureStoreData;
 import co.cask.cdap.api.security.store.SecureStoreManager;
 import co.cask.cdap.common.BadRequestException;
 import co.cask.cdap.common.conf.Constants;
+import co.cask.cdap.common.security.AuditPolicy;
 import co.cask.cdap.gateway.handlers.util.AbstractAppFabricHttpHandler;
 import co.cask.cdap.proto.id.SecureKeyId;
 import co.cask.cdap.proto.security.SecureKeyCreateRequest;
@@ -57,6 +58,7 @@ public class SecureStoreHandler extends AbstractAppFabricHttpHandler {
 
   @Path("/{key-name}")
   @PUT
+  @AuditPolicy(requestBody = true)
   public void create(HttpRequest httpRequest, HttpResponder httpResponder, @PathParam("namespace-id") String namespace,
                      @PathParam("key-name") String name) throws Exception {
 

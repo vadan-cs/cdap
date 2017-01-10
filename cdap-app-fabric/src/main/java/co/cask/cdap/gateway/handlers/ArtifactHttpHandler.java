@@ -32,6 +32,7 @@ import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.conf.PluginClassDeserializer;
 import co.cask.cdap.common.http.AbstractBodyConsumer;
 import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
+import co.cask.cdap.common.security.AuditPolicy;
 import co.cask.cdap.internal.app.runtime.artifact.ArtifactDescriptor;
 import co.cask.cdap.internal.app.runtime.artifact.ArtifactDetail;
 import co.cask.cdap.internal.app.runtime.artifact.ArtifactRepository;
@@ -250,6 +251,7 @@ public class ArtifactHttpHandler extends AbstractHttpHandler {
 
   @PUT
   @Path("/namespaces/{namespace-id}/artifacts/{artifact-name}/versions/{artifact-version}/properties")
+  @AuditPolicy(requestBody = true)
   public void writeProperties(HttpRequest request, HttpResponder responder,
                               @PathParam("namespace-id") String namespaceId,
                               @PathParam("artifact-name") String artifactName,
@@ -279,6 +281,7 @@ public class ArtifactHttpHandler extends AbstractHttpHandler {
 
   @PUT
   @Path("/namespaces/{namespace-id}/artifacts/{artifact-name}/versions/{artifact-version}/properties/{property}")
+  @AuditPolicy(requestBody = true)
   public void writeProperty(HttpRequest request, HttpResponder responder,
                             @PathParam("namespace-id") String namespaceId,
                             @PathParam("artifact-name") String artifactName,
@@ -436,6 +439,7 @@ public class ArtifactHttpHandler extends AbstractHttpHandler {
   @POST
   @Path("/namespaces/{namespace-id}/artifacts/{artifact-name}/" +
     "versions/{artifact-version}/plugintypes/{plugin-type}/plugins/{plugin-name}/methods/{plugin-method}")
+  @AuditPolicy(requestBody = true, responseBody = true)
   public void callArtifactPluginMethod(HttpRequest request, HttpResponder responder,
                                        @PathParam("namespace-id") String namespaceId,
                                        @PathParam("artifact-name") String artifactName,

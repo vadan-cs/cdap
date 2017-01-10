@@ -181,7 +181,6 @@ public class MetricsHandler extends AbstractHttpHandler {
                     @QueryParam("metric") List<String> metrics,
                     @QueryParam("groupBy") List<String> groupBy,
                     @QueryParam("tag") List<String> tags) throws Exception {
-
     if (new QueryStringDecoder(request.getUri()).getParameters().isEmpty()) {
       executeBatchQueries(request, responder);
       return;

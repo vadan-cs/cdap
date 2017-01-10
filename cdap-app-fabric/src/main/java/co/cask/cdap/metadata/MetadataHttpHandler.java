@@ -19,6 +19,7 @@ package co.cask.cdap.metadata;
 import co.cask.cdap.common.BadRequestException;
 import co.cask.cdap.common.NotFoundException;
 import co.cask.cdap.common.conf.Constants;
+import co.cask.cdap.common.security.AuditPolicy;
 import co.cask.cdap.data2.metadata.dataset.SortInfo;
 import co.cask.cdap.proto.ProgramType;
 import co.cask.cdap.proto.codec.NamespacedEntityIdCodec;
@@ -223,6 +224,7 @@ public class MetadataHttpHandler extends AbstractHttpHandler {
 
   @POST
   @Path("/namespaces/{namespace-id}/apps/{app-id}/metadata/properties")
+  @AuditPolicy(requestBody = true)
   public void addAppProperties(HttpRequest request, HttpResponder responder,
                                @PathParam("namespace-id") String namespaceId,
                                @PathParam("app-id") String appId) throws BadRequestException, NotFoundException {
@@ -233,6 +235,7 @@ public class MetadataHttpHandler extends AbstractHttpHandler {
 
   @POST
   @Path("/namespaces/{namespace-id}/artifacts/{artifact-name}/versions/{artifact-version}/metadata/properties")
+  @AuditPolicy(requestBody = true)
   public void addArtifactProperties(HttpRequest request, HttpResponder responder,
                                     @PathParam("namespace-id") String namespaceId,
                                     @PathParam("artifact-name") String artifactName,
@@ -245,6 +248,7 @@ public class MetadataHttpHandler extends AbstractHttpHandler {
 
   @POST
   @Path("/namespaces/{namespace-id}/apps/{app-id}/{program-type}/{program-id}/metadata/properties")
+  @AuditPolicy(requestBody = true)
   public void addProgramProperties(HttpRequest request, HttpResponder responder,
                                    @PathParam("namespace-id") String namespaceId,
                                    @PathParam("app-id") String appId,
@@ -258,6 +262,7 @@ public class MetadataHttpHandler extends AbstractHttpHandler {
 
   @POST
   @Path("/namespaces/{namespace-id}/datasets/{dataset-id}/metadata/properties")
+  @AuditPolicy(requestBody = true)
   public void addDatasetProperties(HttpRequest request, HttpResponder responder,
                                    @PathParam("namespace-id") String namespaceId,
                                    @PathParam("dataset-id") String datasetId)
@@ -269,6 +274,7 @@ public class MetadataHttpHandler extends AbstractHttpHandler {
 
   @POST
   @Path("/namespaces/{namespace-id}/streams/{stream-id}/metadata/properties")
+  @AuditPolicy(requestBody = true)
   public void addStreamProperties(HttpRequest request, HttpResponder responder,
                                   @PathParam("namespace-id") String namespaceId,
                                   @PathParam("stream-id") String streamId)
@@ -280,6 +286,7 @@ public class MetadataHttpHandler extends AbstractHttpHandler {
 
   @POST
   @Path("/namespaces/{namespace-id}/streams/{stream-id}/views/{view-id}/metadata/properties")
+  @AuditPolicy(requestBody = true)
   public void addViewProperties(HttpRequest request, HttpResponder responder,
                                   @PathParam("namespace-id") String namespaceId,
                                   @PathParam("stream-id") String streamId,
@@ -510,6 +517,7 @@ public class MetadataHttpHandler extends AbstractHttpHandler {
 
   @POST
   @Path("/namespaces/{namespace-id}/apps/{app-id}/metadata/tags")
+  @AuditPolicy(requestBody = true)
   public void addAppTags(HttpRequest request, HttpResponder responder,
                          @PathParam("namespace-id") String namespaceId,
                          @PathParam("app-id") String appId) throws BadRequestException, NotFoundException {
@@ -521,6 +529,7 @@ public class MetadataHttpHandler extends AbstractHttpHandler {
 
   @POST
   @Path("/namespaces/{namespace-id}/artifacts/{artifact-name}/versions/{artifact-version}/metadata/tags")
+  @AuditPolicy(requestBody = true)
   public void addArtifactTags(HttpRequest request, HttpResponder responder,
                               @PathParam("namespace-id") String namespaceId,
                               @PathParam("artifact-name") String artifactName,
@@ -534,6 +543,7 @@ public class MetadataHttpHandler extends AbstractHttpHandler {
 
   @POST
   @Path("/namespaces/{namespace-id}/apps/{app-id}/{program-type}/{program-id}/metadata/tags")
+  @AuditPolicy(requestBody = true)
   public void addProgramTags(HttpRequest request, HttpResponder responder,
                              @PathParam("namespace-id") String namespaceId,
                              @PathParam("app-id") String appId,
@@ -547,6 +557,7 @@ public class MetadataHttpHandler extends AbstractHttpHandler {
 
   @POST
   @Path("/namespaces/{namespace-id}/datasets/{dataset-id}/metadata/tags")
+  @AuditPolicy(requestBody = true)
   public void addDatasetTags(HttpRequest request, HttpResponder responder,
                             @PathParam("namespace-id") String namespaceId,
                             @PathParam("dataset-id") String datasetId) throws BadRequestException, NotFoundException {
@@ -558,6 +569,7 @@ public class MetadataHttpHandler extends AbstractHttpHandler {
 
   @POST
   @Path("/namespaces/{namespace-id}/streams/{stream-id}/metadata/tags")
+  @AuditPolicy(requestBody = true)
   public void addStreamTags(HttpRequest request, HttpResponder responder,
                             @PathParam("namespace-id") String namespaceId,
                             @PathParam("stream-id") String streamId) throws BadRequestException, NotFoundException {
@@ -569,6 +581,7 @@ public class MetadataHttpHandler extends AbstractHttpHandler {
 
   @POST
   @Path("/namespaces/{namespace-id}/streams/{stream-id}/views/{view-id}/metadata/tags")
+  @AuditPolicy(requestBody = true)
   public void addViewTags(HttpRequest request, HttpResponder responder,
                             @PathParam("namespace-id") String namespaceId,
                             @PathParam("stream-id") String streamId,

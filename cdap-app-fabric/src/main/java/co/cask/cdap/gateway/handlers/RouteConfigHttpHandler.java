@@ -18,6 +18,7 @@ package co.cask.cdap.gateway.handlers;
 
 import co.cask.cdap.common.BadRequestException;
 import co.cask.cdap.common.conf.Constants;
+import co.cask.cdap.common.security.AuditPolicy;
 import co.cask.cdap.gateway.handlers.util.AbstractAppFabricHttpHandler;
 import co.cask.cdap.internal.app.services.ProgramLifecycleService;
 import co.cask.cdap.proto.ProgramType;
@@ -72,6 +73,7 @@ public class RouteConfigHttpHandler extends AbstractAppFabricHttpHandler {
 
   @PUT
   @Path("/routeconfig")
+  @AuditPolicy(requestBody = true)
   public void storeRouteConfig(HttpRequest request, HttpResponder responder,
                                @PathParam("namespace-id") String namespaceId,
                                @PathParam("app-id") String appId,

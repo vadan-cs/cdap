@@ -17,6 +17,7 @@
 package co.cask.cdap.gateway.handlers;
 
 import co.cask.cdap.common.conf.Constants;
+import co.cask.cdap.common.security.AuditPolicy;
 import co.cask.cdap.config.Config;
 import co.cask.cdap.config.ConfigExistsException;
 import co.cask.cdap.config.ConfigNotFoundException;
@@ -63,6 +64,7 @@ public class DashboardHttpHandler extends AbstractHttpHandler {
 
   @Path("/")
   @POST
+  @AuditPolicy(requestBody = true, responseBody = true)
   public void create(HttpRequest request, HttpResponder responder,
                      @PathParam("namespace-id") String namespace) throws Exception {
     String data = request.getContent().toString(Charsets.UTF_8);
@@ -139,6 +141,7 @@ public class DashboardHttpHandler extends AbstractHttpHandler {
 
   @Path("/{dashboard-id}")
   @PUT
+  @AuditPolicy(requestBody = true)
   public void set(HttpRequest request, HttpResponder responder,
                   @PathParam("namespace-id") String namespace,
                   @PathParam("dashboard-id") String id) throws Exception {

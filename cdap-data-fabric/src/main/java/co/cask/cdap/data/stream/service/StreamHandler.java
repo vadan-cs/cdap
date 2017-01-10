@@ -27,6 +27,7 @@ import co.cask.cdap.common.NotFoundException;
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
+import co.cask.cdap.common.security.AuditPolicy;
 import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.data.stream.StreamCoordinatorClient;
 import co.cask.cdap.data.stream.StreamFileWriterFactory;
@@ -208,6 +209,7 @@ public final class StreamHandler extends AbstractHttpHandler {
 
   @PUT
   @Path("/{stream}")
+  @AuditPolicy(requestBody = true)
   public void create(HttpRequest request, HttpResponder responder,
                      @PathParam("namespace-id") String namespaceId,
                      @PathParam("stream") String stream) throws Exception {
@@ -321,6 +323,7 @@ public final class StreamHandler extends AbstractHttpHandler {
 
   @PUT
   @Path("/{stream}/properties")
+  @AuditPolicy(requestBody = true)
   public void setConfig(HttpRequest request, HttpResponder responder,
                         @PathParam("namespace-id") String namespaceId,
                         @PathParam("stream") String stream) throws Exception {

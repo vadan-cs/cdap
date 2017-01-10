@@ -19,6 +19,7 @@ package co.cask.cdap.data.stream;
 import co.cask.cdap.api.data.schema.Schema;
 import co.cask.cdap.common.BadRequestException;
 import co.cask.cdap.common.conf.Constants;
+import co.cask.cdap.common.security.AuditPolicy;
 import co.cask.cdap.data2.transaction.stream.StreamAdmin;
 import co.cask.cdap.internal.io.SchemaTypeAdapter;
 import co.cask.cdap.proto.ViewDetail;
@@ -68,6 +69,7 @@ public class StreamViewHttpHandler extends AbstractHttpHandler {
 
   @PUT
   @Path("/streams/{stream}/views/{view}")
+  @AuditPolicy(requestBody = true)
   public void createOrUpdate(HttpRequest request, HttpResponder responder,
                              @PathParam("namespace") String namespace,
                              @PathParam("stream") String stream,
