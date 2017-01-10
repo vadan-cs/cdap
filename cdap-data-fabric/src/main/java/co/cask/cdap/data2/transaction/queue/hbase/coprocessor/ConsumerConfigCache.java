@@ -105,6 +105,11 @@ public class ConsumerConfigCache {
   }
 
   @Nullable
+  public CConfiguration getCConf() {
+    return conf;
+  }
+
+  @Nullable
   public QueueConsumerConfig getConsumerConfig(byte[] queueName) {
     return configCache.get(queueName);
   }

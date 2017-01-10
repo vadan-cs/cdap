@@ -64,9 +64,11 @@ public class TopicMetadataCache {
 
   private Thread refreshThread;
   private long lastUpdated;
+
   private volatile Map<ByteBuffer, Map<String, String>> metadataCache = new HashMap<>();
   private long metadataCacheUpdateFreqInMillis = TimeUnit.SECONDS.toMillis(
     MessagingUtils.Constants.METADATA_CACHE_UPDATE_FREQUENCY_SECS);
+  private CConfiguration cConf;
 
   public TopicMetadataCache(RegionCoprocessorEnvironment env, CConfigurationReader cConfReader,
                             HTableNameConverter nameConverter, String hbaseNamespacePrefix,
@@ -95,6 +97,11 @@ public class TopicMetadataCache {
     return metadataCache.get(topicId);
   }
 
+  @Nullable
+  public CConfiguration getCConfiguration() {
+    return cConf;
+  }
+
   /**
    * Called in unit tests and since the refresh thread might invoke cache update at the same time, we make this method
    * synchronized. Aside from unit tests, synchronization is not required.
@@ -107,7 +114,7 @@ public class TopicMetadataCache {
     try {
       CConfiguration cConf = cConfReader.read();
       if (cConf != null) {
-
+        this.cConf = cConf;
         int metadataScanSize = cConf.getInt(Constants.MessagingSystem.HBASE_SCAN_CACHE_ROWS);
         metadataCacheUpdateFreqInMillis = TimeUnit.SECONDS.toMillis(cConf.getLong(
           Constants.MessagingSystem.COPROCESSOR_METADATA_CACHE_UPDATE_FREQUENCY_SECONDS,
