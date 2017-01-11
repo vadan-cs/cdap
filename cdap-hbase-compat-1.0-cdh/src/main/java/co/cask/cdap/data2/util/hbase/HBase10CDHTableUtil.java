@@ -84,61 +84,6 @@ public class HBase10CDHTableUtil extends HBaseTableUtil {
   }
 
   @Override
-  public void createNamespaceIfNotExists(HBaseAdmin admin, String namespace) throws IOException {
-    Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
-    Preconditions.checkArgument(namespace != null, "Namespace should not be null.");
-    if (!hasNamespace(admin, namespace)) {
-      NamespaceDescriptor namespaceDescriptor =
-        NamespaceDescriptor.create(nameConverter.encodeHBaseEntity(namespace)).build();
-      admin.createNamespace(namespaceDescriptor);
-    }
-  }
-
-  @Override
-  public void deleteNamespaceIfExists(HBaseAdmin admin, String namespace) throws IOException {
-    Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
-    Preconditions.checkArgument(namespace != null, "Namespace should not be null.");
-    if (hasNamespace(admin, namespace)) {
-      admin.deleteNamespace(nameConverter.encodeHBaseEntity(namespace));
-    }
-  }
-
-  @Override
-  public void disableTable(HBaseAdmin admin, TableId tableId) throws IOException {
-    Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
-    Preconditions.checkArgument(tableId != null, "Table Id should not be null.");
-    admin.disableTable(nameConverter.toTableName(tablePrefix, tableId));
-  }
-
-  @Override
-  public void enableTable(HBaseAdmin admin, TableId tableId) throws IOException {
-    Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
-    Preconditions.checkArgument(tableId != null, "Table Id should not be null.");
-    admin.enableTable(nameConverter.toTableName(tablePrefix, tableId));
-  }
-
-  @Override
-  public boolean tableExists(HBaseAdmin admin, TableId tableId) throws IOException {
-    Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
-    Preconditions.checkArgument(tableId != null, "Table Id should not be null.");
-    return admin.tableExists(nameConverter.toTableName(tablePrefix, tableId));
-  }
-
-  @Override
-  public void deleteTable(HBaseAdmin admin, TableId tableId) throws IOException {
-    Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
-    Preconditions.checkArgument(tableId != null, "Table Id should not be null.");
-    admin.deleteTable(nameConverter.toTableName(tablePrefix, tableId));
-  }
-
-  @Override
-  public void modifyTable(HBaseAdmin admin, HTableDescriptor tableDescriptor) throws IOException {
-    Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
-    Preconditions.checkArgument(tableDescriptor != null, "Table descriptor should not be null.");
-    admin.modifyTable(tableDescriptor.getTableName(), tableDescriptor);
-  }
-
-  @Override
   public List<HRegionInfo> getTableRegions(HBaseAdmin admin, TableId tableId) throws IOException {
     Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
     Preconditions.checkArgument(tableId != null, "Table Id should not be null.");

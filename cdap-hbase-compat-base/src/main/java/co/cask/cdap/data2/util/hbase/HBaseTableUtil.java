@@ -47,6 +47,7 @@ import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HConstants;
 import org.apache.hadoop.hbase.HRegionInfo;
 import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.RegionLoad;
 import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.TableExistsException;
@@ -551,7 +552,15 @@ public abstract class HBaseTableUtil {
    * @param namespace the namespace to create
    * @throws IOException if an I/O error occurs during the operation
    */
-  public abstract void createNamespaceIfNotExists(HBaseAdmin admin, String namespace) throws IOException;
+  public void createNamespaceIfNotExists(HBaseAdmin admin, String namespace) throws IOException {
+    Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
+    Preconditions.checkArgument(namespace != null, "Namespace should not be null.");
+    if (!hasNamespace(admin, namespace)) {
+      NamespaceDescriptor namespaceDescriptor =
+        NamespaceDescriptor.create(getHTableNameConverter().encodeHBaseEntity(namespace)).build();
+      admin.createNamespace(namespaceDescriptor);
+    }
+  }
 
   /**
    * Creates an HBase namespace, if it exists
@@ -560,7 +569,13 @@ public abstract class HBaseTableUtil {
    * @param namespace the namespace to delete
    * @throws IOException if an I/O error occurs during the operation
    */
-  public abstract void  deleteNamespaceIfExists(HBaseAdmin admin, String namespace) throws IOException;
+  public void deleteNamespaceIfExists(HBaseAdmin admin, String namespace) throws IOException {
+    Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
+    Preconditions.checkArgument(namespace != null, "Namespace should not be null.");
+    if (hasNamespace(admin, namespace)) {
+      admin.deleteNamespace(getHTableNameConverter().encodeHBaseEntity(namespace));
+    }
+  }
 
   /**
    * Disable an HBase table
@@ -569,7 +584,11 @@ public abstract class HBaseTableUtil {
    * @param tableId {@link TableId} for the specified table
    * @throws IOException
    */
-  public abstract void disableTable(HBaseAdmin admin, TableId tableId) throws IOException;
+  public void disableTable(HBaseAdmin admin, TableId tableId) throws IOException {
+    Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
+    Preconditions.checkArgument(tableId != null, "Table Id should not be null.");
+    admin.disableTable(getHTableNameConverter().toTableName(tablePrefix, tableId));
+  }
 
   /**
    * Enable an HBase table
@@ -578,7 +597,11 @@ public abstract class HBaseTableUtil {
    * @param tableId {@link TableId} for the specified table
    * @throws IOException
    */
-  public abstract void enableTable(HBaseAdmin admin, TableId tableId) throws IOException;
+  public void enableTable(HBaseAdmin admin, TableId tableId) throws IOException {
+    Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
+    Preconditions.checkArgument(tableId != null, "Table Id should not be null.");
+    admin.enableTable(getHTableNameConverter().toTableName(tablePrefix, tableId));
+  }
 
   /**
    * Check if an HBase table exists
@@ -587,7 +610,11 @@ public abstract class HBaseTableUtil {
    * @param tableId {@link TableId} for the specified table
    * @throws IOException
    */
-  public abstract boolean tableExists(HBaseAdmin admin, TableId tableId) throws IOException;
+  public boolean tableExists(HBaseAdmin admin, TableId tableId) throws IOException {
+    Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
+    Preconditions.checkArgument(tableId != null, "Table Id should not be null.");
+    return admin.tableExists(getHTableNameConverter().toTableName(tablePrefix, tableId));
+  }
 
   /**
    * Delete an HBase table
@@ -596,7 +623,11 @@ public abstract class HBaseTableUtil {
    * @param tableId {@link TableId} for the specified table
    * @throws IOException
    */
-  public abstract void deleteTable(HBaseAdmin admin, TableId tableId) throws IOException;
+  public void deleteTable(HBaseAdmin admin, TableId tableId) throws IOException {
+    Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
+    Preconditions.checkArgument(tableId != null, "Table Id should not be null.");
+    admin.deleteTable(getHTableNameConverter().toTableName(tablePrefix, tableId));
+  }
 
   /**
    * Modify an HBase table
@@ -605,7 +636,11 @@ public abstract class HBaseTableUtil {
    * @param tableDescriptor the modified {@link HTableDescriptor}
    * @throws IOException
    */
-  public abstract void modifyTable(HBaseAdmin admin, HTableDescriptor tableDescriptor) throws IOException;
+  public void modifyTable(HBaseAdmin admin, HTableDescriptor tableDescriptor) throws IOException {
+    Preconditions.checkArgument(admin != null, "HBaseAdmin should not be null");
+    Preconditions.checkArgument(tableDescriptor != null, "Table descriptor should not be null.");
+    admin.modifyTable(tableDescriptor.getTableName(), tableDescriptor);
+  }
 
   /**
    * Returns a list of {@link HRegionInfo} for the specified {@link TableId}
