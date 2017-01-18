@@ -365,7 +365,7 @@ public class MetadataStoreTest {
     );
 
     response = search(ns.getNamespace(), "tag*", 0, 2, 1);
-    Assert.assertEquals(3, response.getTotal());
+    Assert.assertEquals(2, response.getTotal());
     Assert.assertEquals(
       ImmutableList.of(datasetSearchResult, streamSearchResult),
       ImmutableList.copyOf(stripMetadata(response.getResults()))
@@ -373,7 +373,7 @@ public class MetadataStoreTest {
 
     // skipping trackerDataset should not affect the offset
     response = search(ns.getNamespace(), "tag*", 1, 2, 1);
-    Assert.assertEquals(3, response.getTotal());
+    Assert.assertEquals(2, response.getTotal());
     Assert.assertEquals(
       ImmutableList.of(streamSearchResult, flowSearchResult),
       ImmutableList.copyOf(stripMetadata(response.getResults()))
@@ -381,21 +381,21 @@ public class MetadataStoreTest {
 
     // if showHidden is true trackerDataset should affect the offset
     response = search(ns.getNamespace(), "tag*", 1, 3, 1, true);
-    Assert.assertEquals(4, response.getTotal());
+    Assert.assertEquals(3, response.getTotal());
     Assert.assertEquals(
       ImmutableList.of(datasetSearchResult, streamSearchResult, flowSearchResult),
       ImmutableList.copyOf(stripMetadata(response.getResults()))
     );
 
     response = search(ns.getNamespace(), "tag*", 2, 2, 1);
-    Assert.assertEquals(3, response.getTotal());
+    Assert.assertEquals(1, response.getTotal());
     Assert.assertEquals(
       ImmutableList.of(flowSearchResult),
       ImmutableList.copyOf(stripMetadata(response.getResults()))
     );
 
     response = search(ns.getNamespace(), "tag*", 4, 2, 1);
-    Assert.assertEquals(3, response.getTotal());
+    Assert.assertEquals(0, response.getTotal());
     Assert.assertEquals(
       ImmutableList.<MetadataSearchResultRecord>of(),
       ImmutableList.copyOf(stripMetadata(response.getResults()))

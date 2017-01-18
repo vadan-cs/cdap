@@ -417,7 +417,6 @@ public class DefaultMetadataStore implements MetadataStore {
     // TODO: Figure out how all of this can be done server (HBase) side
     int startIndex = 0;
     int maxEndIndex;
-    int total = sortedEntities.size();
     if (SortInfo.DEFAULT.equals(sortInfo)) {
       // offset needs to be applied
       if (offset > sortedEntities.size()) {
@@ -427,9 +426,8 @@ public class DefaultMetadataStore implements MetadataStore {
         maxEndIndex = offset + limit;
       }
     } else {
-      // offset has already been applied, only apply limit, and update total count
+      // offset has already been applied, only apply limit
       maxEndIndex = limit;
-      total += offset;
     }
     // add 1 to maxIndex because end index is exclusive
     sortedEntities = new LinkedHashSet<>(
@@ -442,9 +440,10 @@ public class DefaultMetadataStore implements MetadataStore {
     Map<NamespacedEntityId, Metadata> systemMetadata = fetchMetadata(sortedEntities, MetadataScope.SYSTEM);
     Map<NamespacedEntityId, Metadata> userMetadata = fetchMetadata(sortedEntities, MetadataScope.USER);
 
+    Set<MetadataSearchResultRecord> resultRecords = addMetadataToEntities(sortedEntities, systemMetadata, userMetadata);
     return new MetadataSearchResponse(
-      sortInfo.getSortBy() + " " + sortInfo.getSortOrder(), offset, limit, numCursors, total,
-      addMetadataToEntities(sortedEntities, systemMetadata, userMetadata), cursors, showHidden
+      sortInfo.getSortBy() + " " + sortInfo.getSortOrder(), offset, limit, numCursors, resultRecords.size(),
+      resultRecords, cursors, showHidden
     );
   }
 
