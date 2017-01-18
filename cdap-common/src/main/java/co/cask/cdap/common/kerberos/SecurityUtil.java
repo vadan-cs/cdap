@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2016 Cask Data, Inc.
+ * Copyright © 2014-2017 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -37,7 +37,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
+import javax.security.auth.kerberos.KerberosPrincipal;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 import javax.security.auth.login.LoginException;
@@ -50,6 +53,11 @@ public final class SecurityUtil {
   private static final Logger LOG = LoggerFactory.getLogger(SecurityUtil.class);
 
   private SecurityUtil() { }
+
+  /**
+   * A pattern to match kerberos principals
+   */
+  private static final Pattern KERBEROS_PRINCIPAL = Pattern.compile("([^/@]*)(/([^/@]*))?@([^/@]*)");
 
   /**
    * Enables Kerberos authentication based on configuration.
@@ -165,6 +173,40 @@ public final class SecurityUtil {
             }
           }
         }, delaySec, delaySec, TimeUnit.SECONDS);
+    }
+  }
+
+  /**
+   * Helper to create a {@link KerberosPrincipal} from given principal string.
+   * <p>
+   * Supports two Kerberos name types:
+   * <ul>
+   * <li>KRB_NT_PRINCIPAL:  Just the name of the principal as in DCE, or for users. For example: alice@REALM</li>
+   * <li>KRB_NT_SRV_HST:  Service with host name as instance(telnet, rcommands).
+   * For example alice/hostname@REALM
+   * </li>
+   * </ul>
+   * Refer to <a href=https://tools.ietf.org/html/rfc4120#section-7.5.8>Name Types</a> documentation for details on
+   * Kerberos Name Types.
+   * </p>
+   *
+   * @param principal the Kerberos principal string
+   * @return {@link KerberosPrincipal} from the given principal
+   * @throws IllegalArgumentException if a {@link KerberosPrincipal} cannot be created from the given principal string
+   */
+  public static KerberosPrincipal parsePrincipal(String principal) {
+    Matcher match = KERBEROS_PRINCIPAL.matcher(principal);
+    if (!match.matches()) {
+      throw new IllegalArgumentException(String.format("Malformed Kerberos Principal: %s. Note the supported " +
+                                                         "Kerberos Name Types are KRB_NT_PRINCIPAL and KRB_NT_SRV_HST",
+                                                       principal));
+    } else {
+      String hostName = match.group(3);
+      if (hostName == null) {
+        return new KerberosPrincipal(principal);
+      } else {
+        return new KerberosPrincipal(principal, KerberosPrincipal.KRB_NT_SRV_HST);
+      }
     }
   }
 }

@@ -82,6 +82,7 @@ import co.cask.cdap.security.authorization.AuthorizationEnforcementModule;
 import co.cask.cdap.security.authorization.AuthorizationEnforcementService;
 import co.cask.cdap.security.guice.SecureStoreModules;
 import co.cask.cdap.store.NamespaceStore;
+import co.cask.cdap.store.OwnerStore;
 import co.cask.cdap.store.guice.NamespaceStoreModule;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.gson.Gson;
@@ -533,6 +534,8 @@ public class UpgradeTool {
     DatasetMetaTableUtil.setupDatasets(datasetFramework);
     // artifacts
     ArtifactStore.setupDatasets(datasetFramework);
+    // owner meta
+    OwnerStore.setupDatasets(datasetFramework);
     // metadata and lineage
     DefaultMetadataStore.setupDatasets(datasetFramework);
     LineageStore.setupDatasets(datasetFramework);

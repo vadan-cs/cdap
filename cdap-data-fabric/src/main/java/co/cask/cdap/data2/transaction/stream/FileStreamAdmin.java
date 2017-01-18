@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2016 Cask Data, Inc.
+ * Copyright © 2014-2017 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -64,8 +64,10 @@ import co.cask.cdap.security.spi.authentication.AuthenticationContext;
 import co.cask.cdap.security.spi.authorization.AuthorizationEnforcer;
 import co.cask.cdap.security.spi.authorization.PrivilegesManager;
 import co.cask.cdap.security.spi.authorization.UnauthorizedException;
+import co.cask.cdap.store.OwnerStore;
 import com.google.common.base.Charsets;
 import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
@@ -87,6 +89,7 @@ import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -113,6 +116,7 @@ public class FileStreamAdmin implements StreamAdmin {
   private final RuntimeUsageRegistry runtimeUsageRegistry;
   private final LineageWriter lineageWriter;
   private final StreamMetaStore streamMetaStore;
+  private final OwnerStore ownerStore;
   private final ExploreTableNaming tableNaming;
   private final ViewAdmin viewAdmin;
   private final MetadataStore metadataStore;
@@ -133,6 +137,7 @@ public class FileStreamAdmin implements StreamAdmin {
                          RuntimeUsageRegistry runtimeUsageRegistry,
                          LineageWriter lineageWriter,
                          StreamMetaStore streamMetaStore,
+                         OwnerStore ownerStore,
                          ExploreTableNaming tableNaming,
                          MetadataStore metadataStore,
                          ViewAdmin viewAdmin,
@@ -150,6 +155,7 @@ public class FileStreamAdmin implements StreamAdmin {
     this.runtimeUsageRegistry = runtimeUsageRegistry;
     this.lineageWriter = lineageWriter;
     this.streamMetaStore = streamMetaStore;
+    this.ownerStore = ownerStore;
     this.tableNaming = tableNaming;
     this.metadataStore = metadataStore;
     this.viewAdmin = viewAdmin;
@@ -330,10 +336,11 @@ public class FileStreamAdmin implements StreamAdmin {
   public StreamProperties getProperties(StreamId streamId) throws Exception {
     // User should have any access on the stream to read its properties
     ensureAccess(streamId);
+    String ownerPrincipal = ownerStore.get(streamId);
     StreamConfig config = getConfig(streamId);
     StreamSpecification spec = streamMetaStore.getStream(streamId);
     return new StreamProperties(config.getTTL(), config.getFormat(), config.getNotificationThresholdMB(),
-                                spec.getDescription());
+                                spec.getDescription(), ownerPrincipal);
   }
 
   @Override
@@ -349,6 +356,10 @@ public class FileStreamAdmin implements StreamAdmin {
     });
 
     Preconditions.checkArgument(streamLocation.isDirectory(), "Stream '%s' does not exist.", streamId);
+    boolean equals = Objects.equals(properties.getOwnerPrincipal(), ownerStore.get(streamId));
+    Preconditions.checkArgument(equals,
+                                String.format("Updating %s is not supported.", Constants.Security.OWNER_PRINCIPAL));
+
     streamCoordinatorClient.updateProperties(
       streamId, new Callable<CoordinatorStreamProperties>() {
         @Override
@@ -371,7 +382,7 @@ public class FileStreamAdmin implements StreamAdmin {
           publishAudit(streamId, AuditType.UPDATE);
           return new CoordinatorStreamProperties(properties.getTTL(), properties.getFormat(),
                                                  properties.getNotificationThresholdMB(), null,
-                                                 properties.getDescription());
+                                                 properties.getDescription(), properties.getOwnerPrincipal());
         }
       });
   }
@@ -440,6 +451,7 @@ public class FileStreamAdmin implements StreamAdmin {
           int threshold = Integer.parseInt(properties.getProperty(
             Constants.Stream.NOTIFICATION_THRESHOLD, cConf.get(Constants.Stream.NOTIFICATION_THRESHOLD)));
           String description = properties.getProperty(Constants.Stream.DESCRIPTION);
+          String ownerPrincipal = properties.getProperty(Constants.Security.OWNER_PRINCIPAL);
           FormatSpecification formatSpec = null;
           if (properties.containsKey(Constants.Stream.FORMAT_SPECIFICATION)) {
             formatSpec = GSON.fromJson(properties.getProperty(Constants.Stream.FORMAT_SPECIFICATION),
@@ -459,6 +471,17 @@ public class FileStreamAdmin implements StreamAdmin {
           createStreamFeeds(config);
           alterExploreStream(streamId, true, config.getFormat());
           streamMetaStore.addStream(streamId, description);
+          // If an owner was provided then store it in owner store.
+          try {
+            if (!Strings.isNullOrEmpty(ownerPrincipal)) {
+              ownerStore.add(streamId, ownerPrincipal);
+            }
+          } catch (Exception e) {
+            // clean up from streamMetaStore
+            streamMetaStore.removeStream(streamId);
+            // Propagate for the below cleanup of privilegeManager to happen
+            throw e;
+          }
           publishAudit(streamId, AuditType.CREATE);
           SystemMetadataWriter systemMetadataWriter =
             new StreamSystemMetadataWriter(metadataStore, streamId, config, createTime, description);
@@ -621,7 +644,7 @@ public class FileStreamAdmin implements StreamAdmin {
         int newGeneration = StreamUtils.getGeneration(streamLocation) + 1;
         Locations.mkdirsIfNotExists(StreamUtils.createGenerationLocation(streamLocation, newGeneration));
         publishAudit(streamId, AuditType.TRUNCATE);
-        return new CoordinatorStreamProperties(null, null, null, newGeneration, null);
+        return new CoordinatorStreamProperties(null, null, null, newGeneration, null, null);
       }
     });
   }

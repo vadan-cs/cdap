@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2016 Cask Data, Inc.
+ * Copyright © 2015-2017 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -244,6 +244,10 @@ public final class StreamHandler extends AbstractHttpHandler {
       if (streamProperties.getFormat() != null) {
         props.put(Constants.Stream.FORMAT_SPECIFICATION, GSON.toJson(streamProperties.getFormat()));
       }
+
+      if (streamProperties.getOwnerPrincipal() != null) {
+        props.put(Constants.Security.OWNER_PRINCIPAL, streamProperties.getOwnerPrincipal());
+      }
     }
 
     streamAdmin.create(streamId, props);
@@ -441,7 +445,8 @@ public final class StreamHandler extends AbstractHttpHandler {
       return null;
     }
 
-    return new StreamProperties(ttl, formatSpec, threshold, properties.getDescription());
+    return new StreamProperties(ttl, formatSpec, threshold, properties.getDescription(),
+                                properties.getOwnerPrincipal());
   }
 
   private RejectedExecutionHandler createAsyncRejectedExecutionHandler() {
@@ -514,6 +519,9 @@ public final class StreamHandler extends AbstractHttpHandler {
       if (src.getDescription() != null) {
         json.addProperty("description", src.getDescription());
       }
+      if (src.getOwnerPrincipal() != null) {
+        json.addProperty(Constants.Security.OWNER_PRINCIPAL, src.getOwnerPrincipal());
+      }
       return json;
     }
 
@@ -532,7 +540,9 @@ public final class StreamHandler extends AbstractHttpHandler {
         jsonObj.get("notification.threshold.mb").getAsInt() : null;
 
       String description = jsonObj.has("description") ? jsonObj.get("description").getAsString() : null;
-      return new StreamProperties(ttl, format, threshold, description);
+      String owner = jsonObj.has(Constants.Security.OWNER_PRINCIPAL) ?
+        jsonObj.get(Constants.Security.OWNER_PRINCIPAL).getAsString() : null;
+      return new StreamProperties(ttl, format, threshold, description, owner);
     }
   }
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2016 Cask Data, Inc.
+ * Copyright © 2014-2017 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -119,10 +119,14 @@ public class NamespaceHttpHandler extends AbstractAppFabricHttpHandler {
       String configuredKeytabURI = finalMetadata.getConfig().getKeytabURI();
       if (configuredPrincipal != null && configuredKeytabURI == null ||
         configuredPrincipal == null && configuredKeytabURI != null) {
-        throw new BadRequestException(
-          String.format("Either neither or both of the following two configurations must be configured. " +
-                          "Configured principal: %s, Configured keytabURI: %s",
-                        configuredPrincipal, configuredKeytabURI));
+        try {
+          throw new IllegalArgumentException(
+            String.format("Either neither or both of the following two configurations must be configured. " +
+                            "Configured principal: %s, Configured keytabURI: %s",
+                          configuredPrincipal, configuredKeytabURI));
+        } catch (IllegalArgumentException e) {
+          throw new BadRequestException(e);
+        }
       }
     }
 
