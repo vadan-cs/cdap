@@ -35,7 +35,6 @@ import co.cask.cdap.common.ArtifactAlreadyExistsException;
 import co.cask.cdap.common.ArtifactNotFoundException;
 import co.cask.cdap.common.io.Locations;
 import co.cask.cdap.common.namespace.NamespacedLocationFactory;
-import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.common.utils.ImmutablePair;
 import co.cask.cdap.data.dataset.SystemDatasetInstantiator;
 import co.cask.cdap.data2.datafabric.dataset.DatasetsUtil;
@@ -43,7 +42,7 @@ import co.cask.cdap.data2.dataset2.DatasetFramework;
 import co.cask.cdap.data2.dataset2.MultiThreadDatasetCache;
 import co.cask.cdap.data2.transaction.Transactions;
 import co.cask.cdap.data2.transaction.TxCallable;
-import co.cask.cdap.internal.app.deploy.pipeline.NamespacedImpersonator;
+import co.cask.cdap.internal.app.deploy.pipeline.EntityImpersonator;
 import co.cask.cdap.internal.app.runtime.plugin.PluginNotExistsException;
 import co.cask.cdap.internal.io.SchemaTypeAdapter;
 import co.cask.cdap.proto.Id;
@@ -53,6 +52,7 @@ import co.cask.cdap.proto.artifact.ArtifactRange;
 import co.cask.cdap.proto.id.DatasetId;
 import co.cask.cdap.proto.id.Ids;
 import co.cask.cdap.proto.id.NamespaceId;
+import co.cask.cdap.security.impersonation.Impersonator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Function;
 import com.google.common.base.Joiner;
@@ -624,7 +624,7 @@ public class ArtifactStore {
   public ArtifactDetail write(final Id.Artifact artifactId,
                               final ArtifactMeta artifactMeta,
                               final InputSupplier<? extends InputStream> artifactContentSupplier,
-                              NamespacedImpersonator namespacedImpersonator)
+                              EntityImpersonator entityImpersonator)
     throws WriteConflictException, ArtifactAlreadyExistsException, IOException {
 
     // if we're not a snapshot version, check that the artifact doesn't exist already.
@@ -646,7 +646,7 @@ public class ArtifactStore {
 
     final Location destination;
     try {
-      destination = copyFileToDestination(artifactId, artifactContentSupplier, namespacedImpersonator);
+      destination = copyFileToDestination(artifactId, artifactContentSupplier, entityImpersonator);
     } catch (Exception e) {
       Throwables.propagateIfInstanceOf(e, IOException.class);
       throw Throwables.propagate(e);
@@ -691,8 +691,8 @@ public class ArtifactStore {
 
   private Location copyFileToDestination(final Id.Artifact artifactId,
                                          final InputSupplier<? extends InputStream> artifactContentSupplier,
-                                         NamespacedImpersonator namespacedImpersonator) throws Exception {
-    return namespacedImpersonator.impersonate(new Callable<Location>() {
+                                         EntityImpersonator entityImpersonator) throws Exception {
+    return entityImpersonator.impersonate(new Callable<Location>() {
       @Override
       public Location call() throws IOException {
         return copyFile(artifactId, artifactContentSupplier);
@@ -871,8 +871,7 @@ public class ArtifactStore {
     // delete the old jar file
 
     try {
-      new NamespacedImpersonator(artifactId.getNamespace().toEntityId(),
-                                 impersonator).impersonate(new Callable<Void>() {
+      new EntityImpersonator(artifactId.getNamespace().toEntityId(), impersonator).impersonate(new Callable<Void>() {
         @Override
         public Void call() throws Exception {
           Locations.getCompatibleLocation(locationFactory, oldMeta.locationPath, oldMeta.locationURI).delete();

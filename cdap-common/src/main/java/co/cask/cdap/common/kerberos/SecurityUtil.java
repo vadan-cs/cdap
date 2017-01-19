@@ -198,4 +198,10 @@ public final class SecurityUtil {
   public static void validateKerberosPrincipal(KerberosPrincipalId principalId) {
     getKerberosName(principalId);
   }
+
+  public static String getKeytabURIforPrincipal(String principal, CConfiguration cConf) throws IOException {
+    String confPath = cConf.get(Constants.Security.KEYTAB_PATH);
+    String name = new KerberosName(principal).getShortName();
+    return confPath.replace(Constants.USER_NAME_SPECIFIER, name);
+  }
 }

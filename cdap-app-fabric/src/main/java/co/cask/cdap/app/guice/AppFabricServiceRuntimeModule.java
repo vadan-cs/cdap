@@ -1,5 +1,5 @@
 /*
- * Copyright © 2014-2016 Cask Data, Inc.
+ * Copyright © 2014-2017 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -30,9 +30,6 @@ import co.cask.cdap.common.kerberos.OwnerAdmin;
 import co.cask.cdap.common.namespace.NamespaceAdmin;
 import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.common.runtime.RuntimeModule;
-import co.cask.cdap.common.security.DefaultUGIProvider;
-import co.cask.cdap.common.security.UGIProvider;
-import co.cask.cdap.common.security.UnsupportedUGIProvider;
 import co.cask.cdap.common.twill.MasterServiceManager;
 import co.cask.cdap.common.utils.Networks;
 import co.cask.cdap.config.guice.ConfigStoreModule;
@@ -110,6 +107,9 @@ import co.cask.cdap.route.store.LocalRouteStore;
 import co.cask.cdap.route.store.RouteStore;
 import co.cask.cdap.route.store.ZKRouteStore;
 import co.cask.cdap.security.auth.context.AuthenticationContextModules;
+import co.cask.cdap.security.impersonation.DefaultUGIProvider;
+import co.cask.cdap.security.impersonation.UGIProvider;
+import co.cask.cdap.security.impersonation.UnsupportedUGIProvider;
 import co.cask.http.HttpHandler;
 import com.google.common.base.Supplier;
 import com.google.common.base.Throwables;
@@ -164,6 +164,7 @@ public final class AppFabricServiceRuntimeModule extends RuntimeModule {
                                bind(MRJobInfoFetcher.class).to(LocalMRJobInfoFetcher.class);
                                bind(StorageProviderNamespaceAdmin.class).to(LocalStorageProviderNamespaceAdmin.class);
                                bind(UGIProvider.class).to(UnsupportedUGIProvider.class);
+                               bind(OwnerAdmin.class).to(DefaultOwnerAdmin.class);
                                bind(RouteStore.class).to(LocalRouteStore.class).in(Scopes.SINGLETON);
                                addInMemoryBindings(binder());
 
@@ -206,6 +207,7 @@ public final class AppFabricServiceRuntimeModule extends RuntimeModule {
                                bind(MRJobInfoFetcher.class).to(LocalMRJobInfoFetcher.class);
                                bind(StorageProviderNamespaceAdmin.class).to(LocalStorageProviderNamespaceAdmin.class);
                                bind(UGIProvider.class).to(UnsupportedUGIProvider.class);
+                               bind(OwnerAdmin.class).to(DefaultOwnerAdmin.class);
                                bind(RouteStore.class).to(LocalRouteStore.class).in(Scopes.SINGLETON);
                                addInMemoryBindings(binder());
 

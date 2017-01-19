@@ -21,12 +21,13 @@ import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.guice.ConfigModule;
 import co.cask.cdap.common.guice.DiscoveryRuntimeModule;
 import co.cask.cdap.common.guice.LocationRuntimeModule;
+import co.cask.cdap.common.kerberos.DefaultOwnerAdmin;
+import co.cask.cdap.common.kerberos.OwnerAdmin;
+import co.cask.cdap.common.kerberos.OwnerStore;
 import co.cask.cdap.common.metrics.NoOpMetricsCollectionService;
 import co.cask.cdap.common.namespace.AbstractNamespaceClient;
 import co.cask.cdap.common.namespace.InMemoryNamespaceClient;
 import co.cask.cdap.common.namespace.guice.NamespaceClientRuntimeModule;
-import co.cask.cdap.common.security.UGIProvider;
-import co.cask.cdap.common.security.UnsupportedUGIProvider;
 import co.cask.cdap.data.runtime.DataFabricModules;
 import co.cask.cdap.data.runtime.DataSetServiceModules;
 import co.cask.cdap.data.runtime.DataSetsModules;
@@ -36,6 +37,9 @@ import co.cask.cdap.explore.client.MockExploreClient;
 import co.cask.cdap.security.auth.context.AuthenticationContextModules;
 import co.cask.cdap.security.authorization.AuthorizationEnforcementModule;
 import co.cask.cdap.security.authorization.AuthorizationTestModule;
+import co.cask.cdap.security.impersonation.UGIProvider;
+import co.cask.cdap.security.impersonation.UnsupportedUGIProvider;
+import co.cask.cdap.store.InMemoryOwnerStore;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -72,6 +76,7 @@ public class MDSViewStoreTest extends ViewStoreTestBase {
         @Override
         protected void configure() {
           bind(AbstractNamespaceClient.class).to(InMemoryNamespaceClient.class);
+          bind(OwnerAdmin.class).to(DefaultOwnerAdmin.class);
           bind(MetricsCollectionService.class).to(NoOpMetricsCollectionService.class).in(Singleton.class);
           bind(ExploreClient.class).to(MockExploreClient.class);
           bind(ViewStore.class).to(MDSViewStore.class).in(Scopes.SINGLETON);
