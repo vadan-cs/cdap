@@ -17,8 +17,8 @@
 package co.cask.cdap.app.guice;
 
 import co.cask.cdap.common.ServiceUnavailableException;
-import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.proto.id.ProgramId;
+import co.cask.cdap.security.impersonation.Impersonator;
 import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.Futures;
 import org.apache.twill.api.Command;
@@ -79,7 +79,7 @@ final class ImpersonatedTwillController implements TwillController {
   @Override
   public ResourceReport getResourceReport() {
     try {
-      return impersonator.doAs(programId.getNamespaceId(), new Callable<ResourceReport>() {
+      return impersonator.doAs(programId, new Callable<ResourceReport>() {
         @Nullable
         @Override
         public ResourceReport call() throws Exception {
@@ -154,7 +154,7 @@ final class ImpersonatedTwillController implements TwillController {
   @Override
   public Future<? extends ServiceController> terminate() {
     try {
-      return impersonator.doAs(programId.getNamespaceId(), new Callable<Future<? extends ServiceController>>() {
+      return impersonator.doAs(programId, new Callable<Future<? extends ServiceController>>() {
         @Override
         public Future<? extends ServiceController> call() throws Exception {
           return delegate.terminate();
@@ -168,7 +168,7 @@ final class ImpersonatedTwillController implements TwillController {
   @Override
   public void kill() {
     try {
-      impersonator.doAs(programId.getNamespaceId(), new Callable<Void>() {
+      impersonator.doAs(programId, new Callable<Void>() {
         @Override
         public Void call() throws Exception {
           delegate.kill();

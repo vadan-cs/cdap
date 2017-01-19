@@ -32,7 +32,6 @@ import co.cask.cdap.common.http.AbstractBodyConsumer;
 import co.cask.cdap.common.io.Locations;
 import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.common.namespace.NamespacedLocationFactory;
-import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.common.utils.DirUtils;
 import co.cask.cdap.data.dataset.SystemDatasetInstantiator;
 import co.cask.cdap.data2.datafabric.dataset.DatasetMetaTableUtil;
@@ -54,6 +53,7 @@ import co.cask.cdap.proto.id.EntityId;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.proto.security.Action;
 import co.cask.cdap.proto.security.Principal;
+import co.cask.cdap.security.impersonation.Impersonator;
 import co.cask.cdap.security.spi.authentication.AuthenticationContext;
 import co.cask.cdap.security.spi.authorization.AuthorizationEnforcer;
 import co.cask.cdap.security.spi.authorization.PrivilegesManager;
@@ -357,7 +357,7 @@ public class DatasetTypeService extends AbstractIdleService {
     final NamespaceId namespaceId = datasetModuleId.getParent();
     final Location namespaceHomeLocation;
     try {
-      namespaceHomeLocation = impersonator.doAs(namespaceId, new Callable<Location>() {
+      namespaceHomeLocation = impersonator.doAs(datasetModuleId, new Callable<Location>() {
         @Override
         public Location call() throws Exception {
           return namespacedLocationFactory.get(namespaceId.toId());

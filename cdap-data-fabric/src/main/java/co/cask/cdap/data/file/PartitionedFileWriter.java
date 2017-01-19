@@ -15,9 +15,9 @@
  */
 package co.cask.cdap.data.file;
 
-import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.proto.id.StreamId;
+import co.cask.cdap.security.impersonation.Impersonator;
 import com.google.common.base.Objects;
 import com.google.common.base.Throwables;
 import com.google.common.collect.AbstractIterator;
@@ -148,7 +148,7 @@ public abstract class PartitionedFileWriter<T, P> implements FileWriter<T> {
       currentWriter = writers.get(partition);
       if (currentWriter == null) {
         try {
-          currentWriter = impersonator.doAs(new NamespaceId(streamId.getNamespace()), new Callable<FileWriter<T>>() {
+          currentWriter = impersonator.doAs(streamId, new Callable<FileWriter<T>>() {
             @Override
             public FileWriter<T> call() throws Exception {
               return fileWriterFactory.create(partition);

@@ -14,21 +14,32 @@
  * the License.
  */
 
-package co.cask.cdap.common.security;
+package co.cask.cdap.security.impersonation;
 
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
+import co.cask.cdap.common.kerberos.SecurityUtil;
 import co.cask.cdap.proto.NamespaceConfig;
 import co.cask.cdap.proto.NamespaceMeta;
 
+import java.io.IOException;
 import java.util.Objects;
 
 /**
  * Encapsulates information necessary to impersonate a user - principal and keytab path.
  */
+//TODO: Handle when the owner is cdap.
 public final class ImpersonationInfo {
   private final String principal;
   private final String keytabURI;
+
+  /**
+   * Creates {@link ImpersonationInfo} using the specified principal and keytab path.
+   */
+  public ImpersonationInfo(String principal, CConfiguration cConf) throws IOException {
+    this.principal = principal;
+    this.keytabURI = SecurityUtil.getKeytabURIforPrincipal(principal, cConf);
+  }
 
   /**
    * Creates {@link ImpersonationInfo} using the specified principal and keytab path.
@@ -39,8 +50,8 @@ public final class ImpersonationInfo {
   }
 
   /**
-   * Creates {@link ImpersonationInfo} for the specified namespace. If the info is not configured at the namespace
-   * level is empty, returns the info configured at the cdap level.
+   * Creates {@link ImpersonationInfo} for the specified Entity. If the info is not configured at the namespace
+   * level, returns the info configured at the cdap level.
    */
   public ImpersonationInfo(NamespaceMeta namespaceMeta, CConfiguration cConf) {
     NamespaceConfig namespaceConfig = namespaceMeta.getConfig();

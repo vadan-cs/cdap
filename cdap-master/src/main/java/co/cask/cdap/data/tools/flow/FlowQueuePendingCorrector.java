@@ -63,7 +63,6 @@ import co.cask.cdap.internal.app.queue.SimpleQueueSpecificationGenerator;
 import co.cask.cdap.internal.app.runtime.flow.FlowUtils;
 import co.cask.cdap.internal.app.store.DefaultStore;
 import co.cask.cdap.messaging.guice.MessagingClientModule;
-import co.cask.cdap.messaging.guice.MessagingServerRuntimeModule;
 import co.cask.cdap.metrics.guice.MetricsClientRuntimeModule;
 import co.cask.cdap.metrics.guice.MetricsStoreModule;
 import co.cask.cdap.notifications.feeds.client.NotificationFeedClientModule;

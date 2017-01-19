@@ -25,8 +25,6 @@ import co.cask.cdap.api.dataset.DatasetProperties;
 import co.cask.cdap.app.store.Store;
 import co.cask.cdap.common.NamespaceNotFoundException;
 import co.cask.cdap.common.conf.CConfiguration;
-import co.cask.cdap.common.security.ImpersonationUtils;
-import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.data.dataset.SystemDatasetInstantiator;
 import co.cask.cdap.data.dataset.SystemDatasetInstantiatorFactory;
 import co.cask.cdap.data.view.ViewAdmin;
@@ -53,6 +51,8 @@ import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.proto.id.ProgramId;
 import co.cask.cdap.proto.id.StreamId;
 import co.cask.cdap.proto.id.StreamViewId;
+import co.cask.cdap.security.impersonation.ImpersonationUtils;
+import co.cask.cdap.security.impersonation.Impersonator;
 import co.cask.cdap.store.NamespaceStore;
 import com.google.inject.Inject;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -149,7 +149,6 @@ class ExistingEntitySystemMetadataWriter {
     SystemDatasetInstantiatorFactory systemDatasetInstantiatorFactory =
       new SystemDatasetInstantiatorFactory(locationFactory, dsFramework, cConf);
     try (SystemDatasetInstantiator systemDatasetInstantiator = systemDatasetInstantiatorFactory.create()) {
-      UserGroupInformation ugi = impersonator.getUGI(namespace);
 
       for (DatasetSpecificationSummary summary : dsFramework.getInstances(namespace)) {
         final DatasetId dsInstance = namespace.dataset(summary.getName());
@@ -158,7 +157,7 @@ class ExistingEntitySystemMetadataWriter {
         Dataset dataset = null;
         try {
           try {
-            dataset = ImpersonationUtils.doAs(ugi, new Callable<Dataset>() {
+            dataset = impersonator.doAs(namespace, new Callable<Dataset>() {
               @Override
               public Dataset call() throws Exception {
                 return systemDatasetInstantiator.getDataset(dsInstance);

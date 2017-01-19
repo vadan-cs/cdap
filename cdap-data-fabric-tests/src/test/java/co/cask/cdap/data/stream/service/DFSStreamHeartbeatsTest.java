@@ -29,8 +29,6 @@ import co.cask.cdap.common.kerberos.OwnerAdmin;
 import co.cask.cdap.common.metrics.NoOpMetricsCollectionService;
 import co.cask.cdap.common.namespace.NamespacedLocationFactory;
 import co.cask.cdap.common.namespace.guice.NamespaceClientRuntimeModule;
-import co.cask.cdap.common.security.UGIProvider;
-import co.cask.cdap.common.security.UnsupportedUGIProvider;
 import co.cask.cdap.common.utils.Tasks;
 import co.cask.cdap.data.runtime.DataFabricModules;
 import co.cask.cdap.data.runtime.DataSetServiceModules;
@@ -58,6 +56,8 @@ import co.cask.cdap.proto.id.StreamId;
 import co.cask.cdap.security.auth.context.AuthenticationContextModules;
 import co.cask.cdap.security.authorization.AuthorizationEnforcementModule;
 import co.cask.cdap.security.authorization.AuthorizationTestModule;
+import co.cask.cdap.security.impersonation.UGIProvider;
+import co.cask.cdap.security.impersonation.UnsupportedUGIProvider;
 import com.google.common.util.concurrent.AbstractIdleService;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
@@ -160,7 +160,6 @@ public class DFSStreamHeartbeatsTest {
           bind(HeartbeatPublisher.class).to(MockHeartbeatPublisher.class).in(Scopes.SINGLETON);
 
           bind(UGIProvider.class).to(UnsupportedUGIProvider.class);
-
           bind(OwnerAdmin.class).to(DefaultOwnerAdmin.class);
         }
       }));

@@ -19,7 +19,6 @@ package co.cask.cdap.data.stream.service;
 import co.cask.cdap.api.flow.flowlet.StreamEvent;
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
-import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.common.stream.StreamEventTypeAdapter;
 import co.cask.cdap.common.utils.TimeMathParser;
 import co.cask.cdap.data.file.FileReader;
@@ -35,6 +34,7 @@ import co.cask.cdap.data2.transaction.stream.StreamConfig;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.proto.id.StreamId;
 import co.cask.cdap.proto.security.Action;
+import co.cask.cdap.security.impersonation.Impersonator;
 import co.cask.cdap.security.spi.authentication.AuthenticationContext;
 import co.cask.cdap.security.spi.authorization.AuthorizationEnforcer;
 import co.cask.http.AbstractHttpHandler;
@@ -137,7 +137,7 @@ public final class StreamFetchHandler extends AbstractHttpHandler {
     endTime = Math.min(endTime, now);
     final long streamStartTime = startTime;
     final long streamEndTime = endTime;
-    impersonator.doAs(new NamespaceId(namespaceId), new Callable<Void>() {
+    impersonator.doAs(streamId, new Callable<Void>() {
       @Override
       public Void call() throws Exception {
         int limit = limitEvents;

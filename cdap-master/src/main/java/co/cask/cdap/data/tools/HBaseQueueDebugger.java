@@ -40,7 +40,6 @@ import co.cask.cdap.common.guice.ZKClientModule;
 import co.cask.cdap.common.kerberos.SecurityUtil;
 import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.common.queue.QueueName;
-import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.common.utils.ImmutablePair;
 import co.cask.cdap.data.runtime.DataFabricModules;
 import co.cask.cdap.data.runtime.DataSetsModules;
@@ -84,6 +83,7 @@ import co.cask.cdap.proto.id.ProgramId;
 import co.cask.cdap.security.authorization.AuthorizationEnforcementModule;
 import co.cask.cdap.security.authorization.AuthorizationEnforcementService;
 import co.cask.cdap.security.guice.SecureStoreModules;
+import co.cask.cdap.security.impersonation.Impersonator;
 import co.cask.cdap.store.guice.NamespaceStoreModule;
 import com.google.common.base.Optional;
 import com.google.common.base.Preconditions;
@@ -176,7 +176,7 @@ public class HBaseQueueDebugger extends AbstractIdleService {
     List<NamespaceMeta> namespaceMetas = namespaceQueryAdmin.list();
     for (final NamespaceMeta namespaceMeta : namespaceMetas) {
       final Collection<ApplicationSpecification> apps = store.getAllApplications(namespaceMeta.getNamespaceId());
-      impersonator.doAs(namespaceMeta, new Callable<Void>() {
+      impersonator.doAs(namespaceMeta.getNamespaceId(), new Callable<Void>() {
         @Override
         public Void call() throws Exception {
           for (ApplicationSpecification app : apps) {

@@ -18,7 +18,6 @@ package co.cask.cdap.data.stream.service;
 import co.cask.cdap.api.flow.flowlet.StreamEvent;
 import co.cask.cdap.api.stream.StreamEventData;
 import co.cask.cdap.common.NotFoundException;
-import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.data.file.FileWriter;
 import co.cask.cdap.data.stream.Refreshable;
 import co.cask.cdap.data.stream.StreamCoordinatorClient;
@@ -32,6 +31,7 @@ import co.cask.cdap.data2.transaction.stream.StreamAdmin;
 import co.cask.cdap.data2.transaction.stream.StreamConfig;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.proto.id.StreamId;
+import co.cask.cdap.security.impersonation.Impersonator;
 import com.google.common.base.Function;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Iterators;
@@ -355,7 +355,7 @@ public final class ConcurrentStreamWriter implements Closeable {
       final StreamConfig streamConfig = streamAdmin.getConfig(streamId);
       int generation;
       try {
-        generation = impersonator.doAs(new NamespaceId(streamId.getNamespace()), new Callable<Integer>() {
+        generation = impersonator.doAs(streamId, new Callable<Integer>() {
           @Override
           public Integer call() throws Exception {
             return StreamUtils.getGeneration(streamConfig);
@@ -387,7 +387,7 @@ public final class ConcurrentStreamWriter implements Closeable {
     void appendFile(final StreamConfig config, final Location eventFile, final Location indexFile,
                     final long timestamp) throws IOException {
       try {
-        impersonator.doAs(new NamespaceId(config.getStreamId().getNamespace()), new Callable<Void>() {
+        impersonator.doAs(config.getStreamId(), new Callable<Void>() {
           @Override
           public Void call() throws Exception {
             int generation = StreamUtils.getGeneration(config);

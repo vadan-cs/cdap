@@ -14,7 +14,7 @@
  * the License.
  */
 
-package co.cask.cdap.common.security;
+package co.cask.cdap.security.impersonation;
 
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;

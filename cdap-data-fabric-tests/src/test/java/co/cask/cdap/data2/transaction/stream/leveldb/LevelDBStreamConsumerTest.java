@@ -23,8 +23,6 @@ import co.cask.cdap.common.kerberos.DefaultOwnerAdmin;
 import co.cask.cdap.common.kerberos.OwnerAdmin;
 import co.cask.cdap.common.namespace.NamespacedLocationFactory;
 import co.cask.cdap.common.namespace.guice.NamespaceClientRuntimeModule;
-import co.cask.cdap.common.security.UGIProvider;
-import co.cask.cdap.common.security.UnsupportedUGIProvider;
 import co.cask.cdap.data.runtime.DataFabricLevelDBModule;
 import co.cask.cdap.data.runtime.DataSetsModules;
 import co.cask.cdap.data.runtime.SystemDatasetRuntimeModule;
@@ -45,6 +43,8 @@ import co.cask.cdap.notifications.feeds.service.NoOpNotificationFeedManager;
 import co.cask.cdap.security.auth.context.AuthenticationContextModules;
 import co.cask.cdap.security.authorization.AuthorizationEnforcementModule;
 import co.cask.cdap.security.authorization.AuthorizationTestModule;
+import co.cask.cdap.security.impersonation.UGIProvider;
+import co.cask.cdap.security.impersonation.UnsupportedUGIProvider;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -96,6 +96,7 @@ public class LevelDBStreamConsumerTest extends StreamConsumerTestBase {
           protected void configure() {
             bind(StreamMetaStore.class).to(InMemoryStreamMetaStore.class);
             bind(NotificationFeedManager.class).to(NoOpNotificationFeedManager.class);
+            bind(OwnerAdmin.class).to(DefaultOwnerAdmin.class);
             bind(UGIProvider.class).to(UnsupportedUGIProvider.class);
             bind(OwnerAdmin.class).to(DefaultOwnerAdmin.class);
           }

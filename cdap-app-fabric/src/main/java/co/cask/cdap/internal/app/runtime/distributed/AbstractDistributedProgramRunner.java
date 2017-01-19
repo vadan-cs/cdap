@@ -28,7 +28,6 @@ import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.lang.ClassLoaders;
 import co.cask.cdap.common.lang.CombineClassLoader;
 import co.cask.cdap.common.lang.jar.BundleJarUtil;
-import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.common.twill.AbortOnTimeoutEventHandler;
 import co.cask.cdap.common.twill.HadoopClassExcluder;
 import co.cask.cdap.common.utils.DirUtils;
@@ -44,6 +43,7 @@ import co.cask.cdap.internal.app.runtime.codec.ProgramOptionsCodec;
 import co.cask.cdap.internal.app.runtime.spark.SparkUtils;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.security.TokenSecureStoreUpdater;
+import co.cask.cdap.security.impersonation.Impersonator;
 import co.cask.cdap.security.store.SecureStoreUtils;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
@@ -355,7 +355,7 @@ public abstract class AbstractDistributedProgramRunner implements ProgramRunner,
         }
       };
 
-      return impersonator.doAs(new NamespaceId(program.getNamespaceId()), callable);
+      return impersonator.doAs(program.getId(), callable);
 
     } catch (Exception e) {
       deleteDirectory(tempDir);

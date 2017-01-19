@@ -19,7 +19,6 @@ package co.cask.cdap.explore.guice;
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.runtime.RuntimeModule;
-import co.cask.cdap.common.utils.FileUtils;
 import co.cask.cdap.explore.executor.ExploreExecutorHttpHandler;
 import co.cask.cdap.explore.executor.ExploreExecutorService;
 import co.cask.cdap.explore.executor.ExploreMetadataHttpHandler;

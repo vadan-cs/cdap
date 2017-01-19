@@ -17,13 +17,13 @@ package co.cask.cdap.data.stream;
 
 import co.cask.cdap.api.flow.flowlet.StreamEvent;
 import co.cask.cdap.common.conf.CConfiguration;
-import co.cask.cdap.common.security.DefaultImpersonator;
-import co.cask.cdap.common.security.Impersonator;
-import co.cask.cdap.common.security.UnsupportedUGIProvider;
 import co.cask.cdap.data.file.FileWriter;
 import co.cask.cdap.data2.transaction.stream.StreamConfig;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.proto.id.StreamId;
+import co.cask.cdap.security.impersonation.DefaultImpersonator;
+import co.cask.cdap.security.impersonation.Impersonator;
+import co.cask.cdap.security.impersonation.UnsupportedUGIProvider;
 import com.google.common.base.Charsets;
 import com.google.common.base.Function;
 import com.google.common.collect.ImmutableList;

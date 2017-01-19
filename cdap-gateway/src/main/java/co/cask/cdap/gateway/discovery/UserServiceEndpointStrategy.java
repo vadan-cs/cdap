@@ -26,7 +26,6 @@ import org.apache.twill.discovery.Discoverable;
 import org.apache.twill.discovery.ServiceDiscovered;
 
 import java.util.Iterator;
-import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import javax.annotation.Nullable;
 

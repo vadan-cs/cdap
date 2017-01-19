@@ -26,8 +26,6 @@ import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.common.namespace.NamespacedLocationFactory;
 import co.cask.cdap.common.namespace.NamespacedLocationFactoryTestClient;
 import co.cask.cdap.common.namespace.SimpleNamespaceQueryAdmin;
-import co.cask.cdap.common.security.UGIProvider;
-import co.cask.cdap.common.security.UnsupportedUGIProvider;
 import co.cask.cdap.data.runtime.DataFabricModules;
 import co.cask.cdap.data.runtime.DataSetsModules;
 import co.cask.cdap.data.runtime.TransactionMetricsModule;
@@ -42,6 +40,9 @@ import co.cask.cdap.notifications.feeds.guice.NotificationFeedServiceRuntimeModu
 import co.cask.cdap.security.auth.context.AuthenticationContextModules;
 import co.cask.cdap.security.authorization.AuthorizationEnforcementModule;
 import co.cask.cdap.security.authorization.AuthorizationTestModule;
+import co.cask.cdap.store.InMemoryOwnerStore;
+import co.cask.cdap.security.impersonation.UGIProvider;
+import co.cask.cdap.security.impersonation.UnsupportedUGIProvider;
 import co.cask.cdap.store.InMemoryOwnerStore;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;

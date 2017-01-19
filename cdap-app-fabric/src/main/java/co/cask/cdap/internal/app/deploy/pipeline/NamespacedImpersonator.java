@@ -16,8 +16,8 @@
 
 package co.cask.cdap.internal.app.deploy.pipeline;
 
-import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.proto.id.NamespaceId;
+import co.cask.cdap.security.impersonation.Impersonator;
 
 import java.util.concurrent.Callable;
 
@@ -42,7 +42,7 @@ public class NamespacedImpersonator {
    * @throws Exception
    */
   public <T> T impersonate(final Callable<T> callable) throws Exception {
-    // todo namespaceId shouldn't be null, it's passed null only from PluginService. which needs to be updated.
+    // todo(nsquare) namespaceId shouldn't be null, it's passed null only from PluginService. which needs to be updated.
     if (namespaceId == null || namespaceId.equals(NamespaceId.SYSTEM)) {
       // do not impersonate for system namespace
       return callable.call();

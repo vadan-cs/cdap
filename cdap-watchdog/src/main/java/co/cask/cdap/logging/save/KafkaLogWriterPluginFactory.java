@@ -20,8 +20,8 @@ import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.io.RootLocationFactory;
 import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
 import co.cask.cdap.common.namespace.NamespacedLocationFactory;
-import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.logging.write.FileMetaDataManager;
+import co.cask.cdap.security.impersonation.Impersonator;
 import com.google.inject.Inject;
 
 /**

@@ -28,8 +28,6 @@ import co.cask.cdap.api.dataset.Updatable;
 import co.cask.cdap.common.BadRequestException;
 import co.cask.cdap.common.NotFoundException;
 import co.cask.cdap.common.conf.CConfiguration;
-import co.cask.cdap.common.security.ImpersonationUtils;
-import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.data.dataset.SystemDatasetInstantiator;
 import co.cask.cdap.data.dataset.SystemDatasetInstantiatorFactory;
 import co.cask.cdap.data2.datafabric.dataset.DatasetType;
@@ -42,6 +40,8 @@ import co.cask.cdap.data2.metadata.system.DatasetSystemMetadataWriter;
 import co.cask.cdap.data2.metadata.system.SystemMetadataWriter;
 import co.cask.cdap.proto.DatasetTypeMeta;
 import co.cask.cdap.proto.id.DatasetId;
+import co.cask.cdap.security.impersonation.ImpersonationUtils;
+import co.cask.cdap.security.impersonation.Impersonator;
 import com.google.common.base.Throwables;
 import com.google.inject.Inject;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -105,7 +105,7 @@ public class DatasetAdminService {
     try (DatasetClassLoaderProvider classLoaderProvider =
            new DirectoryClassLoaderProvider(cConf, locationFactory)) {
       final DatasetContext context = DatasetContext.from(datasetInstanceId.getNamespace());
-      UserGroupInformation ugi = impersonator.getUGI(datasetInstanceId.getParent());
+      UserGroupInformation ugi = impersonator.getUGI(datasetInstanceId);
 
       final DatasetType type = ImpersonationUtils.doAs(ugi, new Callable<DatasetType>() {
         @Override
@@ -201,7 +201,7 @@ public class DatasetAdminService {
     try (DatasetClassLoaderProvider classLoaderProvider =
            new DirectoryClassLoaderProvider(cConf, locationFactory)) {
 
-      impersonator.doAs(datasetInstanceId.getParent(), new Callable<Void>() {
+      impersonator.doAs(datasetInstanceId, new Callable<Void>() {
         @Override
         public Void call() throws Exception {
           DatasetType type = dsFramework.getDatasetType(typeMeta, null, classLoaderProvider);
@@ -236,7 +236,7 @@ public class DatasetAdminService {
 
     try (SystemDatasetInstantiator datasetInstantiator = datasetInstantiatorFactory.create()) {
       try {
-        return impersonator.doAs(datasetInstanceId.getParent(), new Callable<DatasetAdmin>() {
+        return impersonator.doAs(datasetInstanceId, new Callable<DatasetAdmin>() {
           @Override
           public DatasetAdmin call() throws Exception {
             DatasetAdmin admin = datasetInstantiator.getDatasetAdmin(datasetInstanceId);
@@ -244,7 +244,7 @@ public class DatasetAdminService {
               throw new NotFoundException("Couldn't obtain DatasetAdmin for dataset instance " + datasetInstanceId);
             }
             // returns a DatasetAdmin that executes operations as a particular user, for a particular namespace
-            return new ImpersonatingDatasetAdmin(admin, impersonator, datasetInstanceId.getParent());
+            return new ImpersonatingDatasetAdmin(admin, impersonator, datasetInstanceId);
           }
         });
       } catch (Exception e) {

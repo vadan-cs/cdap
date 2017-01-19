@@ -18,9 +18,9 @@ package co.cask.cdap.logging.write;
 
 import co.cask.cdap.common.logging.LoggingContext;
 import co.cask.cdap.common.namespace.NamespacedLocationFactory;
-import co.cask.cdap.common.security.Impersonator;
 import co.cask.cdap.logging.context.LoggingContextHelper;
 import co.cask.cdap.proto.id.NamespaceId;
+import co.cask.cdap.security.impersonation.Impersonator;
 import com.google.common.base.Throwables;
 import com.google.common.collect.Maps;
 import org.apache.avro.Schema;

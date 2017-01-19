@@ -22,9 +22,9 @@ import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.guice.ConfigModule;
 import co.cask.cdap.common.guice.DiscoveryRuntimeModule;
 import co.cask.cdap.common.guice.NonCustomLocationUnitTestModule;
+import co.cask.cdap.common.kerberos.DefaultOwnerAdmin;
+import co.cask.cdap.common.kerberos.OwnerAdmin;
 import co.cask.cdap.common.namespace.guice.NamespaceClientRuntimeModule;
-import co.cask.cdap.common.security.UGIProvider;
-import co.cask.cdap.common.security.UnsupportedUGIProvider;
 import co.cask.cdap.data.runtime.DataFabricModules;
 import co.cask.cdap.data.runtime.DataSetServiceModules;
 import co.cask.cdap.data.runtime.DataSetsModules;
@@ -37,6 +37,8 @@ import co.cask.cdap.metrics.guice.MetricsClientRuntimeModule;
 import co.cask.cdap.security.auth.context.AuthenticationContextModules;
 import co.cask.cdap.security.authorization.AuthorizationEnforcementModule;
 import co.cask.cdap.security.authorization.AuthorizationTestModule;
+import co.cask.cdap.security.impersonation.UGIProvider;
+import co.cask.cdap.security.impersonation.UnsupportedUGIProvider;
 import co.cask.cdap.test.SlowTests;
 import com.google.common.collect.Sets;
 import com.google.inject.AbstractModule;
@@ -110,6 +112,7 @@ public class DatasetBasedTimeScheduleStoreTest {
                                       @Override
                                       protected void configure() {
                                         bind(UGIProvider.class).to(UnsupportedUGIProvider.class);
+                                        bind(OwnerAdmin.class).to(DefaultOwnerAdmin.class);
                                       }
                                     });
     txService = injector.getInstance(TransactionManager.class);

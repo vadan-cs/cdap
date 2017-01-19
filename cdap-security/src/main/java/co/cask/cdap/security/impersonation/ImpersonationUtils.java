@@ -14,7 +14,7 @@
  * the License.
  */
 
-package co.cask.cdap.common.security;
+package co.cask.cdap.security.impersonation;
 
 import com.google.common.base.Throwables;
 import org.apache.hadoop.security.UserGroupInformation;

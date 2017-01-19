@@ -108,14 +108,21 @@
       <groupId>org.jboss.resteasy</groupId>
       <artifactId>resteasy-guice</artifactId>
     </dependency>
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.apache.directory.jdbm</groupId>
+      <artifactId>apacheds-jdbm1</artifactId>
+    </dependency>
+    <dependency>
       <groupId>org.apache.hadoop</groupId>
       <artifactId>hadoop-minicluster</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-minikdc</artifactId>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
@@ -143,6 +150,7 @@
       <scope>test</scope>
       <type>test-jar</type>
     </dependency>
+
   </dependencies>
 
   <build>

@@ -14,22 +14,19 @@
  * the License.
  */
 
-package co.cask.cdap.common.security;
+package co.cask.cdap.security.impersonation;
 
 import org.apache.hadoop.security.UserGroupInformation;
 
 import java.io.IOException;
 
 /**
- * Facilitates getting UserGroupInformation configured for a given user.
+ * A UGIProvider that always returns the current user.
  */
-public interface UGIProvider {
+public class CurrentUGIProvider implements UGIProvider {
 
-  /**
-   * Returns a {@link UserGroupInformation} based on the given {@link ImpersonationInfo}.
-   *
-   * @param impersonationInfo information specifying how to create the UGI
-   * @return the {@link UserGroupInformation} for the configured user
-   */
-  UserGroupInformation getConfiguredUGI(ImpersonationInfo impersonationInfo) throws IOException;
+  @Override
+  public UserGroupInformation getConfiguredUGI(ImpersonationInfo impersonationInfo) throws IOException {
+    return UserGroupInformation.getCurrentUser();
+  }
 }
