@@ -697,6 +697,7 @@ public class FileStreamAdmin implements StreamAdmin {
           });
 
           streamMetaStore.removeStream(streamId);
+          ownerStore.delete(streamId);
           metadataStore.removeMetadata(streamId);
           // revoke all privileges on the stream
           privilegesManager.revoke(streamId);

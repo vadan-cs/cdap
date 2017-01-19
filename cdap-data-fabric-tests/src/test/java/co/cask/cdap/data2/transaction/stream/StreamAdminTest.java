@@ -48,6 +48,7 @@ import co.cask.cdap.security.authorization.InMemoryAuthorizer;
 import co.cask.cdap.security.spi.authentication.SecurityRequestContext;
 import co.cask.cdap.security.spi.authorization.Authorizer;
 import co.cask.cdap.security.spi.authorization.UnauthorizedException;
+import co.cask.cdap.store.OwnerStore;
 import com.google.common.base.Charsets;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
@@ -69,6 +70,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 
 public abstract class StreamAdminTest {
@@ -85,6 +87,8 @@ public abstract class StreamAdminTest {
   protected abstract InMemoryAuditPublisher getInMemoryAuditPublisher();
 
   protected abstract Authorizer getAuthorizer();
+
+  protected abstract OwnerStore getOwnerStore();
 
   protected static void setupNamespaces(NamespacedLocationFactory namespacedLocationFactory) throws IOException {
     namespacedLocationFactory.get(FOO_NAMESPACE.toId()).mkdirs();
@@ -252,6 +256,37 @@ public abstract class StreamAdminTest {
     streamAdmin.truncate(stream);
     Assert.assertEquals(0, getStreamSize(stream));
     streamAdmin.drop(stream);
+  }
+
+  @Test
+  public void testOwner() throws Exception {
+    // crate a stream with owner
+    StreamAdmin streamAdmin = getStreamAdmin();
+    OwnerStore ownerStore = getOwnerStore();
+    grantAndAssertSuccess(FOO_NAMESPACE, USER, ImmutableSet.of(Action.WRITE));
+    StreamId stream = FOO_NAMESPACE.stream("stream");
+    Properties properties = new Properties();
+    properties.put(Constants.Security.OWNER_PRINCIPAL, "user/somehost@somekdc.net");
+    streamAdmin.create(stream, properties);
+    Assert.assertTrue(streamAdmin.exists(stream));
+
+    // Check that the owner information got stored in owner store
+    Assert.assertTrue(ownerStore.exists(stream));
+
+    // also verify that we are able to get owner information back in properties
+    Assert.assertEquals("user/somehost@somekdc.net", streamAdmin.getProperties(stream).getOwnerPrincipal());
+
+    // updating stream owner should fail
+    try {
+      streamAdmin.updateConfig(stream, new StreamProperties(1L, null, null, null, "user/somekdc.net"));
+      Assert.fail();
+    } catch (IllegalArgumentException e) {
+      // expected
+    }
+
+    // drop the stream which should also delete the owner info
+    streamAdmin.drop(stream);
+    Assert.assertFalse(ownerStore.exists(stream));
   }
 
   @Test

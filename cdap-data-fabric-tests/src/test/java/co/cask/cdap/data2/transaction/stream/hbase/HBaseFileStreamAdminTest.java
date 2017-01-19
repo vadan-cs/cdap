@@ -51,6 +51,7 @@ import co.cask.cdap.security.authorization.AuthorizationEnforcementService;
 import co.cask.cdap.security.authorization.AuthorizationTestModule;
 import co.cask.cdap.security.authorization.AuthorizerInstantiator;
 import co.cask.cdap.security.spi.authorization.Authorizer;
+import co.cask.cdap.store.OwnerStore;
 import co.cask.cdap.test.SlowTests;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
@@ -90,6 +91,7 @@ public class HBaseFileStreamAdminTest extends StreamAdminTest {
   private static InMemoryAuditPublisher inMemoryAuditPublisher;
   private static AuthorizationEnforcementService authorizationEnforcementService;
   private static Authorizer authorizer;
+  private static OwnerStore ownerStore;
 
   @BeforeClass
   public static void init() throws Exception {
@@ -139,6 +141,7 @@ public class HBaseFileStreamAdminTest extends StreamAdminTest {
     inMemoryAuditPublisher = injector.getInstance(InMemoryAuditPublisher.class);
     authorizer = injector.getInstance(AuthorizerInstantiator.class).get();
     authorizationEnforcementService = injector.getInstance(AuthorizationEnforcementService.class);
+    ownerStore = injector.getInstance(OwnerStore.class);
 
     setupNamespaces(injector.getInstance(NamespacedLocationFactory.class));
     txManager.startAndWait();
@@ -171,5 +174,10 @@ public class HBaseFileStreamAdminTest extends StreamAdminTest {
   @Override
   protected Authorizer getAuthorizer() {
     return authorizer;
+  }
+
+  @Override
+  protected OwnerStore getOwnerStore() {
+    return ownerStore;
   }
 }
