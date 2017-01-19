@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2016 Cask Data, Inc.
+ * Copyright © 2015-2017 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -21,10 +21,10 @@ import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.kerberos.SecurityUtil;
 import co.cask.cdap.common.namespace.NamespaceQueryAdmin;
-import co.cask.cdap.common.security.ImpersonationInfo;
 import co.cask.cdap.config.PreferencesStore;
 import co.cask.cdap.internal.app.runtime.ProgramOptionConstants;
 import co.cask.cdap.proto.Id;
+import co.cask.cdap.security.impersonation.ImpersonationInfo;
 import com.google.common.collect.Maps;
 import com.google.inject.Inject;
 
@@ -62,8 +62,7 @@ public class PropertiesResolver {
     systemArgs.put(Constants.CLUSTER_NAME, cConf.get(Constants.CLUSTER_NAME, ""));
     systemArgs.put(Constants.AppFabric.APP_SCHEDULER_QUEUE, queueResolver.getQueue(id.getNamespace()));
     if (SecurityUtil.isKerberosEnabled(cConf)) {
-      ImpersonationInfo impersonationInfo = new ImpersonationInfo(
-        namespaceQueryAdmin.get(id.toEntityId().getNamespaceId()), cConf);
+      ImpersonationInfo impersonationInfo = new ImpersonationInfo(id.getApplicationId(), cConf);
       systemArgs.put(ProgramOptionConstants.PRINCIPAL, impersonationInfo.getPrincipal());
       systemArgs.put(ProgramOptionConstants.KEYTAB_URI, impersonationInfo.getKeytabURI());
     }

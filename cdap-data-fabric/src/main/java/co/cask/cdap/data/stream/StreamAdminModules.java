@@ -18,6 +18,8 @@ package co.cask.cdap.data.stream;
 
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
+import co.cask.cdap.common.kerberos.DefaultOwnerAdmin;
+import co.cask.cdap.common.kerberos.OwnerAdmin;
 import co.cask.cdap.common.runtime.RuntimeModule;
 import co.cask.cdap.data.runtime.InMemoryStreamFileWriterFactory;
 import co.cask.cdap.data.runtime.LocationStreamFileWriterFactory;
@@ -115,6 +117,7 @@ public class StreamAdminModules extends RuntimeModule {
         bind(StreamCoordinatorClient.class).to(DistributedStreamCoordinatorClient.class).in(Singleton.class);
         bind(StreamMetaStore.class).to(MDSStreamMetaStore.class).in(Singleton.class);
         bind(StreamConsumerStateStoreFactory.class).to(HBaseStreamConsumerStateStoreFactory.class).in(Singleton.class);
+        bind(OwnerAdmin.class).to(DefaultOwnerAdmin.class);
         bind(StreamAdmin.class).to(FileStreamAdmin.class).in(Singleton.class);
         bind(StreamConsumerFactory.class).toProvider(StreamConsumerFactoryProvider.class).in(Singleton.class);
         bind(StreamFileWriterFactory.class).to(LocationStreamFileWriterFactory.class).in(Singleton.class);
