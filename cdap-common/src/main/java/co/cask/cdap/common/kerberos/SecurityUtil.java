@@ -196,17 +196,41 @@ public final class SecurityUtil {
    */
   public static KerberosPrincipal parsePrincipal(String principal) {
     Matcher match = KERBEROS_PRINCIPAL.matcher(principal);
+    validatePrincipal(principal, match);
+    String hostName = match.group(3);
+    if (hostName == null) {
+      return new KerberosPrincipal(principal);
+    } else {
+      return new KerberosPrincipal(principal, KerberosPrincipal.KRB_NT_SRV_HST);
+    }
+  }
+
+  /**
+   * Validates if a valid {@link KerberosPrincipal} can be created from the given principal string.
+   * <p>
+   * Supports two Kerberos name types:
+   * <ul>
+   * <li>KRB_NT_PRINCIPAL:  Just the name of the principal as in DCE, or for users. For example: alice@REALM</li>
+   * <li>KRB_NT_SRV_HST:  Service with host name as instance(telnet, rcommands).
+   * For example alice/hostname@REALM
+   * </li>
+   * </ul>
+   * Refer to <a href=https://tools.ietf.org/html/rfc4120#section-7.5.8>Name Types</a> documentation for details on
+   * Kerberos Name Types.
+   * </p>
+   *
+   * @param principal the principal which needs to be validated
+   * @throws IllegalArgumentException if the given principal is not valid
+   */
+  public static void validatePrincipal(String principal) {
+    validatePrincipal(principal, KERBEROS_PRINCIPAL.matcher(principal));
+  }
+
+  private static void validatePrincipal(String principal, Matcher match) {
     if (!match.matches()) {
       throw new IllegalArgumentException(String.format("Malformed Kerberos Principal: %s. Note the supported " +
-                                                         "Kerberos Name Types are KRB_NT_PRINCIPAL and KRB_NT_SRV_HST",
-                                                       principal));
-    } else {
-      String hostName = match.group(3);
-      if (hostName == null) {
-        return new KerberosPrincipal(principal);
-      } else {
-        return new KerberosPrincipal(principal, KerberosPrincipal.KRB_NT_SRV_HST);
-      }
+                                                         "Kerberos Name Types are KRB_NT_PRINCIPAL (ex: alice@REALM) " +
+                                                         "and KRB_NT_SRV_HST (ex: alice/hostname@REALM)", principal));
     }
   }
 }

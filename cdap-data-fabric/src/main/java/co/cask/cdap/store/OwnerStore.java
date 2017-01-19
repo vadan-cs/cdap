@@ -51,6 +51,8 @@ import java.util.Collections;
  * <li>{@link co.cask.cdap.api.data.stream.Stream}</li>
  * <li>{@link co.cask.cdap.api.dataset.Dataset}</li>
  * <li>{@link co.cask.cdap.api.app.Application}</li>
+ * <li>{@link co.cask.cdap.common.conf.Constants.Namespace}</li>
+ *
  * </ul>
  * </p>
  * <p>
@@ -115,7 +117,7 @@ public class OwnerStore {
                                                      entityId));
     }
     // Before storing it make sure its a valid kerberos principal to fail early and hence failing the entity creation
-    verifyPrincipal(principal);
+    SecurityUtil.validatePrincipal(principal);
     try {
       transactional.execute(new TxRunnable() {
         @Override
@@ -198,10 +200,5 @@ public class OwnerStore {
   // creates rowkey for association entries
   private byte[] createRowKey(EntityId entityId) {
     return Bytes.toBytes(OWNER_PREFIX + ':' + entityId.toString());
-  }
-
-  private void verifyPrincipal(String principal) {
-    // The below throws IllegalArgumentException if the given principal string is not in valid format
-    SecurityUtil.parsePrincipal(principal);
   }
 }

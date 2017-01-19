@@ -753,6 +753,7 @@ public final class Constants {
     /** Key to mark a discoverable which supports ssl */
     public static final String SSL_URI_SCHEME = "https://";
     public static final String URI_SCHEME = "http://";
+
     public static final String OWNER_PRINCIPAL = "owner.principal";
 
     /**
