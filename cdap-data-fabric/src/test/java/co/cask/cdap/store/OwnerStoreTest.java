@@ -112,6 +112,14 @@ public class OwnerStoreTest {
       // expected
     }
 
+    // Trying to store owner information for unsupported type should fail
+    try {
+      ownerStore.add(NamespaceId.DEFAULT.topic("anotherStream"), new KerberosPrincipalId("somePrincipal"));
+      Assert.fail();
+    } catch (IllegalArgumentException e) {
+      // expected
+    }
+
     // delete the owner information
     ownerStore.delete(streamId);
     Assert.assertFalse(ownerStore.exists(streamId));

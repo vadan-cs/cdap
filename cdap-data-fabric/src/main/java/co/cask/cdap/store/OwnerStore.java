@@ -34,11 +34,13 @@ import co.cask.cdap.data2.dataset2.lib.table.EntityIdKeyHelper;
 import co.cask.cdap.data2.dataset2.lib.table.MDSKey;
 import co.cask.cdap.data2.transaction.Transactions;
 import co.cask.cdap.data2.transaction.TxCallable;
+import co.cask.cdap.proto.element.EntityType;
 import co.cask.cdap.proto.id.DatasetId;
 import co.cask.cdap.proto.id.EntityId;
 import co.cask.cdap.proto.id.KerberosPrincipalId;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.proto.id.NamespacedEntityId;
+import com.google.common.collect.Sets;
 import com.google.inject.Inject;
 import org.apache.tephra.RetryStrategies;
 import org.apache.tephra.TransactionFailureException;
@@ -46,6 +48,7 @@ import org.apache.tephra.TransactionSystemClient;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
@@ -85,6 +88,9 @@ public class OwnerStore {
   private static final DatasetId DATASET_ID = NamespaceId.SYSTEM.dataset("owner.meta");
   private static final DatasetProperties DATASET_PROPERTIES =
     DatasetProperties.builder().add(Table.PROPERTY_CONFLICT_LEVEL, ConflictDetection.COLUMN.name()).build();
+  private static final Set<EntityType> SUPPORTED_ENTITY_TYPES = Sets.newHashSet(EntityType.NAMESPACE,
+                                                                                EntityType.APPLICATION,
+                                                                                EntityType.DATASET, EntityType.STREAM);
 
   private final DatasetFramework datasetFramework;
   private final Transactional transactional;
@@ -116,12 +122,14 @@ public class OwnerStore {
    * @param kerberosPrincipalId the {@link KerberosPrincipalId} of the {@link EntityId} owner
    * @throws IOException if failed to get the store
    * @throws AlreadyExistsException if the given entity already has an owner
-   * @throws IllegalArgumentException if the given KerberosPrincipalId is not valid
+   * @throws IllegalArgumentException if the given KerberosPrincipalId is not valid or the entity is not of
+   * supported type. The supported types are {@link OwnerStore#SUPPORTED_ENTITY_TYPES}.
    */
   public void add(final NamespacedEntityId entityId, final KerberosPrincipalId kerberosPrincipalId)
     throws IOException, AlreadyExistsException {
     // first validate that the given kerberos principal id is valid
     SecurityUtil.validateKerberosPrincipal(kerberosPrincipalId);
+    validateEntityType(entityId);
     try {
       transactional.execute(new TxRunnable() {
         @Override
@@ -148,8 +156,11 @@ public class OwnerStore {
    * @param entityId the {@link EntityId} whose owner principal information needs to be retrieved
    * @return {@link KerberosPrincipalId} of the {@link EntityId} owner
    * @throws IOException if failed to get the store
+   * @throws IllegalArgumentException if the given entity is not of supported type. The supported types are
+   * {@link OwnerStore#SUPPORTED_ENTITY_TYPES}
    */
   public KerberosPrincipalId getOwner(final NamespacedEntityId entityId) throws IOException {
+    validateEntityType(entityId);
     try {
       return Transactions.execute(transactional, new TxCallable<KerberosPrincipalId>() {
         @Override
@@ -171,12 +182,18 @@ public class OwnerStore {
    * <p>
    * If an owner is present for this entity id then returns the {@link KerberosPrincipalId} of that immediate owner.
    * If a direct owner is not present then the namespace owner {@link KerberosPrincipalId} will be returned if
-   * one is present
+   * one is present else returns null.
    * <p>
-   * </p>
+   *
+   * @param entityId the {@link EntityId} whose owner principal information needs to be retrieved
+   * @return {@link KerberosPrincipalId} of the effective owner for the given entity
+   * @throws IOException if  failed to get the store
+   * @throws IllegalArgumentException if the given entity is not of supported type. The supported types are
+   * {@link OwnerStore#SUPPORTED_ENTITY_TYPES}
    */
   @Nullable
   public KerberosPrincipalId getEffectiveOwner(final NamespacedEntityId entityId) throws IOException {
+    validateEntityType(entityId);
     try {
       return Transactions.execute(transactional, new TxCallable<KerberosPrincipalId>() {
         @Override
@@ -199,8 +216,11 @@ public class OwnerStore {
    * @param entityId the {@link EntityId} for which the check needs to be performed
    * @return a boolean true: owner principal exists, false: no owner principal exists
    * @throws IOException if failed to get the store
+   * @throws IllegalArgumentException if the given entity is not of supported type. The supported types are
+   * {@link OwnerStore#SUPPORTED_ENTITY_TYPES}
    */
   public boolean exists(final NamespacedEntityId entityId) throws IOException {
+    validateEntityType(entityId);
     try {
       return Transactions.execute(transactional, new TxCallable<Boolean>() {
         @Override
@@ -219,8 +239,11 @@ public class OwnerStore {
    *
    * @param entityId the entity whose owner principal needs to be deleted
    * @throws IOException if failed to get the owner store
+   * @throws IllegalArgumentException if the given entity is not of supported type. The supported types are
+   * {@link OwnerStore#SUPPORTED_ENTITY_TYPES}
    */
   public void delete(final NamespacedEntityId entityId) throws IOException {
+    validateEntityType(entityId);
     try {
       transactional.execute(new TxRunnable() {
         @Override
@@ -246,5 +269,14 @@ public class OwnerStore {
     EntityIdKeyHelper.addTargetIdToKey(builder, targetId);
     MDSKey build = builder.build();
     return build.getKey();
+  }
+
+  private void validateEntityType(NamespacedEntityId entityId) {
+    if (!SUPPORTED_ENTITY_TYPES.contains(entityId.getEntityType())) {
+      throw new IllegalArgumentException(String.format("The given entity '%s' is of unsupported types '%s'. " +
+                                                         "Entity ownership is only supported for '%s'.",
+                                                       entityId.getEntityName(), entityId.getEntityType(),
+                                                       SUPPORTED_ENTITY_TYPES));
+    }
   }
 }
