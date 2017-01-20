@@ -23,6 +23,7 @@ import co.cask.cdap.common.namespace.guice.NamespaceClientRuntimeModule;
 import co.cask.cdap.data.runtime.DataSetsModules;
 import co.cask.cdap.data.runtime.SystemDatasetRuntimeModule;
 import co.cask.cdap.data2.dataset2.DatasetFrameworkTestUtil;
+import co.cask.cdap.proto.id.KerberosPrincipalId;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.proto.id.StreamId;
 import co.cask.cdap.security.auth.context.AuthenticationContextModules;
@@ -69,31 +70,27 @@ public class OwnerStoreTest {
 
   @Test
   public void test() throws Exception {
-    // create a stream without any owner
     StreamId streamId = NamespaceId.DEFAULT.stream("fooStream");
 
     // No owner info should exist for above stream
-    Assert.assertNull(ownerStore.get(streamId));
+    Assert.assertNull(ownerStore.getOwner(streamId));
 
     // delete behavior is idempotent, so won't throw NotFoundException
     ownerStore.delete(streamId);
 
-    // Trying to add an invalid principal should fail
-    try {
-      ownerStore.add(streamId, "somePrincipal");
-      Assert.fail();
-    } catch (IllegalArgumentException e) {
-      // expected
-    }
+    // Storing an owner for the first time should work
+    KerberosPrincipalId kerberosPrincipalId = new KerberosPrincipalId("alice/somehost@SOMEKDC.NET");
+    ownerStore.add(streamId, kerberosPrincipalId);
 
-    // Storing a valid principal should work
-    ownerStore.add(streamId, "alice/somehost@SOMEKDC.NET");
+    // owner principal should exists
+    Assert.assertTrue(ownerStore.exists(streamId));
+
     // Should be able to get the principal back
-    Assert.assertEquals("alice/somehost@SOMEKDC.NET", ownerStore.get(streamId));
+    Assert.assertEquals(kerberosPrincipalId, ownerStore.getOwner(streamId));
 
     // Should not be able to update the owner principal
     try {
-      ownerStore.add(streamId, "bob@SOMEKDC.NET");
+      ownerStore.add(streamId, new KerberosPrincipalId("bob@SOMEKDC.NET"));
       Assert.fail();
     } catch (AlreadyExistsException e) {
       // expected
@@ -101,6 +98,7 @@ public class OwnerStoreTest {
 
     // delete the owner information
     ownerStore.delete(streamId);
-    Assert.assertNull(ownerStore.get(streamId));
+    Assert.assertFalse(ownerStore.exists(streamId));
+    Assert.assertNull(ownerStore.getOwner(streamId));
   }
 }

@@ -52,6 +52,7 @@ import co.cask.cdap.proto.ViewSpecification;
 import co.cask.cdap.proto.audit.AuditPayload;
 import co.cask.cdap.proto.audit.AuditType;
 import co.cask.cdap.proto.id.EntityId;
+import co.cask.cdap.proto.id.KerberosPrincipalId;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.proto.id.NotificationFeedId;
 import co.cask.cdap.proto.id.ProgramRunId;
@@ -336,7 +337,8 @@ public class FileStreamAdmin implements StreamAdmin {
   public StreamProperties getProperties(StreamId streamId) throws Exception {
     // User should have any access on the stream to read its properties
     ensureAccess(streamId);
-    String ownerPrincipal = ownerStore.get(streamId);
+    String ownerPrincipal = ownerStore.getOwner(streamId) == null ? null :
+      ownerStore.getOwner(streamId).getPrincipalAsString();
     StreamConfig config = getConfig(streamId);
     StreamSpecification spec = streamMetaStore.getStream(streamId);
     return new StreamProperties(config.getTTL(), config.getFormat(), config.getNotificationThresholdMB(),
@@ -356,7 +358,9 @@ public class FileStreamAdmin implements StreamAdmin {
     });
 
     Preconditions.checkArgument(streamLocation.isDirectory(), "Stream '%s' does not exist.", streamId);
-    boolean equals = Objects.equals(properties.getOwnerPrincipal(), ownerStore.get(streamId));
+    boolean equals = Objects.equals(properties.getOwnerPrincipal(),
+                                    ownerStore.getOwner(streamId) == null ? null :
+                                      ownerStore.getOwner(streamId).getPrincipalAsString());
     Preconditions.checkArgument(equals,
                                 String.format("Updating %s is not supported.", Constants.Security.OWNER_PRINCIPAL));
 
@@ -373,7 +377,7 @@ public class FileStreamAdmin implements StreamAdmin {
             // a hive change, as they are just properties used by the stream storage handler.
             Schema currSchema = oldProperties.getFormat().getSchema();
             Schema newSchema = format.getSchema();
-            if (!currSchema.equals(newSchema)) {
+            if (Objects.equals(currSchema, newSchema)) {
               alterExploreStream(streamId, false, null);
               alterExploreStream(streamId, true, format);
             }
@@ -474,7 +478,7 @@ public class FileStreamAdmin implements StreamAdmin {
           // If an owner was provided then store it in owner store.
           try {
             if (!Strings.isNullOrEmpty(ownerPrincipal)) {
-              ownerStore.add(streamId, ownerPrincipal);
+              ownerStore.add(streamId, new KerberosPrincipalId(ownerPrincipal));
             }
           } catch (Exception e) {
             // clean up from streamMetaStore

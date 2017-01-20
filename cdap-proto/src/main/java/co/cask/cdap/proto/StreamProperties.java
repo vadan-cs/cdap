@@ -86,6 +86,7 @@ public class StreamProperties {
   /**
    * @return The principal of the stream owner
    */
+  @Nullable
   public String getOwnerPrincipal() {
     return ownerPrincipal;
   }

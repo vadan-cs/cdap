@@ -25,7 +25,6 @@ import co.cask.cdap.api.dataset.DatasetProperties;
 import co.cask.cdap.api.dataset.table.ConflictDetection;
 import co.cask.cdap.api.dataset.table.Table;
 import co.cask.cdap.common.AlreadyExistsException;
-import co.cask.cdap.common.kerberos.SecurityUtil;
 import co.cask.cdap.data.dataset.SystemDatasetInstantiator;
 import co.cask.cdap.data2.datafabric.dataset.DatasetsUtil;
 import co.cask.cdap.data2.dataset2.DatasetFramework;
@@ -34,6 +33,7 @@ import co.cask.cdap.data2.transaction.Transactions;
 import co.cask.cdap.data2.transaction.TxCallable;
 import co.cask.cdap.proto.id.DatasetId;
 import co.cask.cdap.proto.id.EntityId;
+import co.cask.cdap.proto.id.KerberosPrincipalId;
 import co.cask.cdap.proto.id.NamespaceId;
 import com.google.inject.Inject;
 import org.apache.tephra.RetryStrategies;
@@ -42,6 +42,7 @@ import org.apache.tephra.TransactionSystemClient;
 
 import java.io.IOException;
 import java.util.Collections;
+import javax.annotation.Nullable;
 
 /**
  * This class manages owner's principal information of CDAP entities.
@@ -52,7 +53,7 @@ import java.util.Collections;
  * <li>{@link co.cask.cdap.api.dataset.Dataset}</li>
  * <li>{@link co.cask.cdap.api.app.Application}</li>
  * <li>{@link co.cask.cdap.common.conf.Constants.Namespace}</li>
- *
+ * <p>
  * </ul>
  * </p>
  * <p>
@@ -105,25 +106,49 @@ public class OwnerStore {
   }
 
   /**
-   * Store the owner's principal for the given {@link EntityId}
+   * Store the owner's kerberosPrincipalId for the given {@link EntityId}
    *
-   * @param entityId The {@link EntityId} whose owner principal needs to be stored
-   * @param principal the principal of the {@link EntityId} owner
+   * @param entityId The {@link EntityId} whose owner kerberosPrincipalId needs to be stored
+   * @param kerberosPrincipalId the {@link KerberosPrincipalId} of the {@link EntityId} owner
    * @throws IOException if failed to get the store
    */
-  public void add(final EntityId entityId, final String principal) throws IOException, AlreadyExistsException {
-    if (exists(entityId)) {
-      throw new AlreadyExistsException(String.format("Owner information already exists for entity '%s'.",
-                                                     entityId));
-    }
-    // Before storing it make sure its a valid kerberos principal to fail early and hence failing the entity creation
-    SecurityUtil.validatePrincipal(principal);
+  public void add(final EntityId entityId, final KerberosPrincipalId kerberosPrincipalId)
+    throws IOException, AlreadyExistsException {
     try {
       transactional.execute(new TxRunnable() {
         @Override
         public void run(DatasetContext context) throws Exception {
           Table metaTable = getTable(context);
-          metaTable.put(createRowKey(entityId), COL, Bytes.toBytes(principal));
+          // make sure that an owner does not already exists
+          byte[] principalBytes = metaTable.get(createRowKey(entityId), COL);
+          if (principalBytes != null) {
+            throw new AlreadyExistsException(entityId,
+                                             String.format("Owner information already exists for entity '%s'.",
+                                                           entityId));
+          }
+          metaTable.put(createRowKey(entityId), COL, Bytes.toBytes(kerberosPrincipalId.getPrincipalAsString()));
+        }
+      });
+    } catch (TransactionFailureException e) {
+      throw Transactions.propagate(e, IOException.class, AlreadyExistsException.class);
+    }
+  }
+
+  /**
+   * Retrieves the owner information for the given {@link EntityId}
+   *
+   * @param entityId the {@link EntityId} whose owner principal information needs to be retrieved
+   * @return {@link KerberosPrincipalId} of the {@link EntityId} owner
+   * @throws IOException if failed to get the store
+   */
+  @Nullable
+  public KerberosPrincipalId getOwner(final EntityId entityId) throws IOException {
+    try {
+      return Transactions.execute(transactional, new TxCallable<KerberosPrincipalId>() {
+        @Override
+        public KerberosPrincipalId call(DatasetContext context) throws Exception {
+          byte[] principalBytes = getTable(context).get(createRowKey(entityId), COL);
+          return principalBytes == null ? null : new KerberosPrincipalId(Bytes.toString(principalBytes));
         }
       });
     } catch (TransactionFailureException e) {
@@ -132,19 +157,28 @@ public class OwnerStore {
   }
 
   /**
-   * Retrieves the owner information for the given {@link EntityId}
-   *
-   * @param entityId the {@link EntityId} whose owner principal information needs to be retrieved
-   * @return {@link String} which is the principal of the {@link EntityId} owner
-   * @throws IOException if failed to get the store
+   * <p>
+   * Returns the {@link KerberosPrincipalId} to be impersonated for this {@link EntityId} by tracing the entity
+   * hierarchy.
+   * </p>
+   * <p>
+   * If an owner is present for this entity id then returns the {@link KerberosPrincipalId} of that immediate owner.
+   * If a direct owner is not present then the namespace owner {@link KerberosPrincipalId} will be returned if
+   * one is present
+   * <p>
+   * </p>
    */
-  public String get(final EntityId entityId) throws IOException {
+  @Nullable
+  public KerberosPrincipalId getEffectiveOwner(final EntityId entityId) throws IOException {
     try {
-      return Transactions.execute(transactional, new TxCallable<String>() {
+      return Transactions.execute(transactional, new TxCallable<KerberosPrincipalId>() {
         @Override
-        public String call(DatasetContext context) throws Exception {
+        public KerberosPrincipalId call(DatasetContext context) throws Exception {
           byte[] principalBytes = getTable(context).get(createRowKey(entityId), COL);
-          return principalBytes == null ? null : Bytes.toString(principalBytes);
+          if (principalBytes == null) {
+            // TODO: no immediate owner found look up in hierarchy
+          }
+          return principalBytes == null ? null : new KerberosPrincipalId(Bytes.toString(principalBytes));
         }
       });
     } catch (TransactionFailureException e) {
