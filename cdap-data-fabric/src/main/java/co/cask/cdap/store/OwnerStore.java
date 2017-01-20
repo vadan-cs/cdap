@@ -29,12 +29,15 @@ import co.cask.cdap.data.dataset.SystemDatasetInstantiator;
 import co.cask.cdap.data2.datafabric.dataset.DatasetsUtil;
 import co.cask.cdap.data2.dataset2.DatasetFramework;
 import co.cask.cdap.data2.dataset2.MultiThreadDatasetCache;
+import co.cask.cdap.data2.dataset2.lib.table.EntityIdKeyHelper;
+import co.cask.cdap.data2.dataset2.lib.table.MDSKey;
 import co.cask.cdap.data2.transaction.Transactions;
 import co.cask.cdap.data2.transaction.TxCallable;
 import co.cask.cdap.proto.id.DatasetId;
 import co.cask.cdap.proto.id.EntityId;
 import co.cask.cdap.proto.id.KerberosPrincipalId;
 import co.cask.cdap.proto.id.NamespaceId;
+import co.cask.cdap.proto.id.NamespacedEntityId;
 import com.google.inject.Inject;
 import org.apache.tephra.RetryStrategies;
 import org.apache.tephra.TransactionFailureException;
@@ -112,7 +115,7 @@ public class OwnerStore {
    * @param kerberosPrincipalId the {@link KerberosPrincipalId} of the {@link EntityId} owner
    * @throws IOException if failed to get the store
    */
-  public void add(final EntityId entityId, final KerberosPrincipalId kerberosPrincipalId)
+  public void add(final NamespacedEntityId entityId, final KerberosPrincipalId kerberosPrincipalId)
     throws IOException, AlreadyExistsException {
     try {
       transactional.execute(new TxRunnable() {
@@ -141,8 +144,7 @@ public class OwnerStore {
    * @return {@link KerberosPrincipalId} of the {@link EntityId} owner
    * @throws IOException if failed to get the store
    */
-  @Nullable
-  public KerberosPrincipalId getOwner(final EntityId entityId) throws IOException {
+  public KerberosPrincipalId getOwner(final NamespacedEntityId entityId) throws IOException {
     try {
       return Transactions.execute(transactional, new TxCallable<KerberosPrincipalId>() {
         @Override
@@ -169,7 +171,7 @@ public class OwnerStore {
    * </p>
    */
   @Nullable
-  public KerberosPrincipalId getEffectiveOwner(final EntityId entityId) throws IOException {
+  public KerberosPrincipalId getEffectiveOwner(final NamespacedEntityId entityId) throws IOException {
     try {
       return Transactions.execute(transactional, new TxCallable<KerberosPrincipalId>() {
         @Override
@@ -193,7 +195,7 @@ public class OwnerStore {
    * @return a boolean true: owner principal exists, false: no owner principal exists
    * @throws IOException if failed to get the store
    */
-  public boolean exists(final EntityId entityId) throws IOException {
+  public boolean exists(final NamespacedEntityId entityId) throws IOException {
     try {
       return Transactions.execute(transactional, new TxCallable<Boolean>() {
         @Override
@@ -213,7 +215,7 @@ public class OwnerStore {
    * @param entityId the entity whose owner principal needs to be deleted
    * @throws IOException if failed to get the owner store
    */
-  public void delete(final EntityId entityId) throws IOException {
+  public void delete(final NamespacedEntityId entityId) throws IOException {
     try {
       transactional.execute(new TxRunnable() {
         @Override
@@ -231,8 +233,13 @@ public class OwnerStore {
                                            DATASET_PROPERTIES);
   }
 
-  // creates rowkey for association entries
-  private byte[] createRowKey(EntityId entityId) {
-    return Bytes.toBytes(OWNER_PREFIX + ':' + entityId.toString());
+  private static byte[] createRowKey(NamespacedEntityId targetId) {
+    String targetType = EntityIdKeyHelper.getTargetType(targetId);
+    MDSKey.Builder builder = new MDSKey.Builder();
+    builder.add(OWNER_PREFIX);
+    builder.add(targetType);
+    EntityIdKeyHelper.addTargetIdToKey(builder, targetId);
+    MDSKey build = builder.build();
+    return build.getKey();
   }
 }
