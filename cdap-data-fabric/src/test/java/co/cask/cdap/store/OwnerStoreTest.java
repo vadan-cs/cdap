@@ -96,6 +96,22 @@ public class OwnerStoreTest {
       // expected
     }
 
+    // Should not be able to update the owner principal
+    try {
+      ownerStore.add(streamId, new KerberosPrincipalId("somePrincipal"));
+      Assert.fail();
+    } catch (AlreadyExistsException e) {
+      // expected
+    }
+
+    // trying to update with invalid principal should fail early on with IllegalArgumentException
+    try {
+      ownerStore.add(streamId, new KerberosPrincipalId("b@ob@SOMEKDC.NET"));
+      Assert.fail();
+    } catch (IllegalArgumentException e) {
+      // expected
+    }
+
     // delete the owner information
     ownerStore.delete(streamId);
     Assert.assertFalse(ownerStore.exists(streamId));

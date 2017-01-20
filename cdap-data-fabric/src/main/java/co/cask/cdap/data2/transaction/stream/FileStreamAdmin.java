@@ -338,7 +338,7 @@ public class FileStreamAdmin implements StreamAdmin {
     // User should have any access on the stream to read its properties
     ensureAccess(streamId);
     String ownerPrincipal = ownerStore.getOwner(streamId) == null ? null :
-      ownerStore.getOwner(streamId).getPrincipalAsString();
+      ownerStore.getOwner(streamId).getPrincipal();
     StreamConfig config = getConfig(streamId);
     StreamSpecification spec = streamMetaStore.getStream(streamId);
     return new StreamProperties(config.getTTL(), config.getFormat(), config.getNotificationThresholdMB(),
@@ -360,7 +360,7 @@ public class FileStreamAdmin implements StreamAdmin {
     Preconditions.checkArgument(streamLocation.isDirectory(), "Stream '%s' does not exist.", streamId);
     boolean equals = Objects.equals(properties.getOwnerPrincipal(),
                                     ownerStore.getOwner(streamId) == null ? null :
-                                      ownerStore.getOwner(streamId).getPrincipalAsString());
+                                      ownerStore.getOwner(streamId).getPrincipal());
     Preconditions.checkArgument(equals,
                                 String.format("Updating %s is not supported.", Constants.Security.OWNER_PRINCIPAL));
 

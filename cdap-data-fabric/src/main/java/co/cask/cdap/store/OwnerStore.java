@@ -25,6 +25,7 @@ import co.cask.cdap.api.dataset.DatasetProperties;
 import co.cask.cdap.api.dataset.table.ConflictDetection;
 import co.cask.cdap.api.dataset.table.Table;
 import co.cask.cdap.common.AlreadyExistsException;
+import co.cask.cdap.common.kerberos.SecurityUtil;
 import co.cask.cdap.data.dataset.SystemDatasetInstantiator;
 import co.cask.cdap.data2.datafabric.dataset.DatasetsUtil;
 import co.cask.cdap.data2.dataset2.DatasetFramework;
@@ -114,9 +115,13 @@ public class OwnerStore {
    * @param entityId The {@link EntityId} whose owner kerberosPrincipalId needs to be stored
    * @param kerberosPrincipalId the {@link KerberosPrincipalId} of the {@link EntityId} owner
    * @throws IOException if failed to get the store
+   * @throws AlreadyExistsException if the given entity already has an owner
+   * @throws IllegalArgumentException if the given KerberosPrincipalId is not valid
    */
   public void add(final NamespacedEntityId entityId, final KerberosPrincipalId kerberosPrincipalId)
     throws IOException, AlreadyExistsException {
+    // first validate that the given kerberos principal id is valid
+    SecurityUtil.validateKerberosPrincipal(kerberosPrincipalId);
     try {
       transactional.execute(new TxRunnable() {
         @Override
@@ -129,7 +134,7 @@ public class OwnerStore {
                                              String.format("Owner information already exists for entity '%s'.",
                                                            entityId));
           }
-          metaTable.put(createRowKey(entityId), COL, Bytes.toBytes(kerberosPrincipalId.getPrincipalAsString()));
+          metaTable.put(createRowKey(entityId), COL, Bytes.toBytes(kerberosPrincipalId.getPrincipal()));
         }
       });
     } catch (TransactionFailureException e) {

@@ -22,9 +22,6 @@ import co.cask.cdap.proto.element.EntityType;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import javax.security.auth.kerberos.KerberosPrincipal;
 
 /**
  * <p>
@@ -44,35 +41,27 @@ import javax.security.auth.kerberos.KerberosPrincipal;
  * {@link co.cask.cdap.proto.security.Principal} can READ (use) the {@link KerberosPrincipalId} to impersonate the user
  * of the {@link KerberosPrincipalId}.
  * </p>
+ * <p>
+ * This class does not perform any kind of validation while creating an instance through
+ * {@link KerberosPrincipalId#KerberosPrincipalId(String)} to check if the principal is valid format or not.
+ * Its the responsibility of the client to perform validation if needed.
+ * </p>
  */
 public class KerberosPrincipalId extends EntityId {
 
-  // A pattern to match kerberos principals
-  private static final Pattern KERBEROS_PRINCIPAL = Pattern.compile("([^/@]*)(/([^/@]*))?@([^/@]*)");
-
   private final String principal;
-  private final KerberosPrincipal kerberosPrincipal;
   private transient Integer hashCode;
 
   public KerberosPrincipalId(String principal) {
     super(EntityType.KERBEROSPRINCIPAL);
-    if (principal == null) {
-      throw new NullPointerException("Principal cannot be null");
+    if (principal == null || principal.isEmpty()) {
+      throw new NullPointerException("Principal cannot be null or empty");
     }
-    // Store the principal in the form given by the user as we have to present this back to the user later.
-    // KerberosPrincipal.toString gives the principal back in GSS_KRB5_NT_PRINCIPAL_NAME form which might not be the
-    // same as what user gave initially.
     this.principal = principal;
-    this.kerberosPrincipal = getKerberosPrincipal(principal);
   }
 
-
-  public String getPrincipalAsString() {
+  public String getPrincipal() {
     return principal;
-  }
-
-  public KerberosPrincipal getKerberosPrincipal() {
-    return kerberosPrincipal;
   }
 
   @Override
@@ -88,7 +77,7 @@ public class KerberosPrincipalId extends EntityId {
 
   @Override
   public String getEntityName() {
-    return getPrincipalAsString();
+    return getPrincipal();
   }
 
   @SuppressWarnings("unused")
@@ -113,63 +102,5 @@ public class KerberosPrincipalId extends EntityId {
       this.hashCode = hashCode = Objects.hash(super.hashCode(), principal);
     }
     return hashCode;
-  }
-
-  /**
-   * Helper to create a {@link KerberosPrincipal} from given principal string.
-   * <p>
-   * Supports two Kerberos name types:
-   * <ul>
-   * <li>KRB_NT_PRINCIPAL:  Just the name of the principal as in DCE, or for users. For example: alice@REALM</li>
-   * <li>KRB_NT_SRV_HST:  Service with host name as instance(telnet, rcommands).
-   * For example alice/hostname@REALM
-   * </li>
-   * </ul>
-   * Refer to <a href=https://tools.ietf.org/html/rfc4120#section-7.5.8>Name Types</a> documentation for details on
-   * Kerberos Name Types.
-   * </p>
-   *
-   * @param principal the Kerberos principal string
-   * @return {@link KerberosPrincipal} from the given principal
-   * @throws IllegalArgumentException if a {@link KerberosPrincipal} cannot be created from the given principal string
-   */
-  private KerberosPrincipal getKerberosPrincipal(String principal) {
-    Matcher match = KERBEROS_PRINCIPAL.matcher(principal);
-    validatePrincipal(principal, match);
-    String hostName = match.group(3);
-    if (hostName == null) {
-      return new KerberosPrincipal(principal);
-    } else {
-      return new KerberosPrincipal(principal, KerberosPrincipal.KRB_NT_SRV_HST);
-    }
-  }
-
-  /**
-   * Validates if a valid {@link KerberosPrincipal} can be created from the given principal string.
-   * <p>
-   * Supports two Kerberos name types:
-   * <ul>
-   * <li>KRB_NT_PRINCIPAL:  Just the name of the principal as in DCE, or for users. For example: alice@REALM</li>
-   * <li>KRB_NT_SRV_HST:  Service with host name as instance(telnet, rcommands).
-   * For example alice/hostname@REALM
-   * </li>
-   * </ul>
-   * Refer to <a href=https://tools.ietf.org/html/rfc4120#section-7.5.8>Name Types</a> documentation for details on
-   * Kerberos Name Types.
-   * </p>
-   *
-   * @param principal the principal which needs to be validated
-   * @throws IllegalArgumentException if the given principal is not valid
-   */
-  public static void validatePrincipal(String principal) {
-    validatePrincipal(principal, KERBEROS_PRINCIPAL.matcher(principal));
-  }
-
-  private static void validatePrincipal(String principal, Matcher match) {
-    if (!match.matches()) {
-      throw new IllegalArgumentException(String.format("Malformed Kerberos Principal: %s. Note the supported " +
-                                                         "Kerberos Name Types are KRB_NT_PRINCIPAL (ex: alice@REALM) " +
-                                                         "and KRB_NT_SRV_HST (ex: alice/hostname@REALM)", principal));
-    }
   }
 }
