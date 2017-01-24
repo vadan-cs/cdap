@@ -97,10 +97,11 @@ public class DataStreamsSparkLauncher extends AbstractSpark {
     // so... we have to set this hacky master variable based on the isUnitTest setting in the config
     Map<String, String> programProperties = context.getSpecification().getProperties();
     String extraOpts = programProperties.get(EXTRA_OPTS);
-    if (extraOpts != null && !extraOpts.isEmpty()) {
-      sparkConf.set("spark.driver.extraJavaOptions", extraOpts);
-      sparkConf.set("spark.executor.extraJavaOptions", extraOpts);
+    if (extraOpts == null || extraOpts.isEmpty()) {
+      extraOpts = "-XX:MaxPermSize=256m";
     }
+    sparkConf.set("spark.driver.extraJavaOptions", extraOpts);
+    sparkConf.set("spark.executor.extraJavaOptions", extraOpts);
     Integer numSources = Integer.valueOf(programProperties.get(NUM_SOURCES));
     // without this, stopping will hang on machines with few cores.
     sparkConf.set("spark.rpc.netty.dispatcher.numThreads", String.valueOf(numSources + 2));
