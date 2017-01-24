@@ -29,9 +29,9 @@ import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 /**
- * {@link OperationalStats} for reporting CDAP Router requests.
+ * {@link OperationalStats} for reporting Load on the CDAP Router in the past hour.
  */
-public class CDAPConnections extends AbstractCDAPStats implements CDAPConnectionsMXBean {
+public class CDAPLoad extends AbstractCDAPStats implements CDAPConnectionsMXBean {
 
   private MetricStore metricStore;
   private long totalRequests;
@@ -48,7 +48,7 @@ public class CDAPConnections extends AbstractCDAPStats implements CDAPConnection
 
   @Override
   public String getStatType() {
-    return "connections";
+    return "lastHourLoad";
   }
 
   @Override
@@ -96,7 +96,7 @@ public class CDAPConnections extends AbstractCDAPStats implements CDAPConnection
     // we want metrics in the last hour
     long startTime = currentTimeSecs - (60 * 60);
     Collection<MetricTimeSeries> metricTimeSeries = metricStore.query(
-      new MetricDataQuery(startTime, currentTimeSecs, Integer.MAX_VALUE, metricName, AggregationFunction.SUM,
+      new MetricDataQuery(startTime, currentTimeSecs, 3600, metricName, AggregationFunction.SUM,
                           Collections.<String, String>emptyMap(), Collections.<String>emptyList())
     );
     return metricTimeSeries.isEmpty() ? 0L : metricTimeSeries.iterator().next().getTimeValues().get(0).getValue();
