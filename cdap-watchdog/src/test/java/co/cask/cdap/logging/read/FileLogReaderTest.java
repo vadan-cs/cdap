@@ -16,8 +16,8 @@
 
 package co.cask.cdap.logging.read;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSortedMap;
+import co.cask.cdap.logging.write.LogLocation;
+import co.cask.cdap.proto.id.NamespaceId;
 import org.apache.twill.filesystem.LocalLocationFactory;
 import org.apache.twill.filesystem.Location;
 import org.junit.Assert;
@@ -25,64 +25,54 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import java.util.Collections;
-import java.util.NavigableMap;
-import java.util.TreeMap;
+import java.util.ArrayList;
+import java.util.List;
 
 public class FileLogReaderTest {
   @Rule
   public TemporaryFolder tempFolder = new TemporaryFolder();
 
   @Test
-  public void testGetFilesInRange() throws Exception {
+  public void testFilterLogs() throws Exception {
     Location base = new LocalLocationFactory().create(tempFolder.newFolder().toURI());
-    NavigableMap<Long, Location> sortedFiles = new TreeMap<>(ImmutableSortedMap.of(10L, base.append("10"),
-                                                                                   15L, base.append("15"),
-                                                                                   20L, base.append("20"),
-                                                                                   28L, base.append("28"),
-                                                                                   35L, base.append("35")));
+    List<LogLocation> logLocationList = new ArrayList<>();
+    for (long i = 10; i < 40; i += 5) {
+      logLocationList.add(new LogLocation(LogLocation.VERSION_1, i, 0, base.append(String.valueOf(i)),
+                                          NamespaceId.DEFAULT.getNamespace(), null));
+    }
+    // okay to pass metadata reader null, as we are just testing the methods which doesn't use metadata reader.
+    FileLogReader fileLogReader = new FileLogReader(null);
+    logLocationList = fileLogReader.sortFilesInRange(logLocationList);
+    List<LogLocation> result = fileLogReader.filterFilesByStartTime(logLocationList, 32);
+    Assert.assertEquals(2, result.size());
+    Assert.assertEquals(30, result.get(0).getEventTimeMs());
+    Assert.assertEquals(35, result.get(1).getEventTimeMs());
 
-    // JIRA: CDAP-3900. Query for the logs not within the range of the sortedFiles.
-    Assert.assertEquals(Collections.<Location>emptyList(), FileLogReader.getFilesInRange(sortedFiles, 1, 9));
+    result = fileLogReader.filterFilesByStartTime(logLocationList, 42);
+    Assert.assertEquals(1, result.size());
+    Assert.assertEquals(35, result.get(0).getEventTimeMs());
 
-    Assert.assertEquals(Collections.<Location>emptyList(), FileLogReader.getFilesInRange(sortedFiles, 1, 10));
 
-    Assert.assertEquals(ImmutableList.of(base.append("10")), FileLogReader.getFilesInRange(sortedFiles, 1, 11));
 
-    // Since we don't know the last log entry in 35, we need to return 35 for query with [46, 50)
-    Assert.assertEquals(ImmutableList.of(base.append("35")), FileLogReader.getFilesInRange(sortedFiles, 46, 50));
+    logLocationList = new ArrayList<>();
+    long timestamp = System.currentTimeMillis();
 
-    Assert.assertEquals(ImmutableList.of(base.append("15"),
-                                         base.append("20")),
-                        FileLogReader.getFilesInRange(sortedFiles, 15, 28));
+    logLocationList.add(new LogLocation(LogLocation.VERSION_1, 100, timestamp + 2, base.append(String.valueOf(100)),
+                                        NamespaceId.DEFAULT.getNamespace(), null));
+    logLocationList.add(new LogLocation(LogLocation.VERSION_1, 100, timestamp, base.append(String.valueOf(100)),
+                                        NamespaceId.DEFAULT.getNamespace(), null));
+    logLocationList.add(new LogLocation(LogLocation.VERSION_1, 100, timestamp + 1, base.append(String.valueOf(100)),
+                                        NamespaceId.DEFAULT.getNamespace(), null));
 
-    Assert.assertEquals(ImmutableList.of(base.append("10"),
-                                         base.append("15"),
-                                         base.append("20"),
-                                         base.append("28")),
-                        FileLogReader.getFilesInRange(sortedFiles, 13, 30));
 
-    Assert.assertEquals(ImmutableList.of(base.append("10"),
-                                         base.append("15"),
-                                         base.append("20"),
-                                         base.append("28")),
-                        FileLogReader.getFilesInRange(sortedFiles, 10, 34));
+    logLocationList = fileLogReader.sortFilesInRange(logLocationList);
+    result = fileLogReader.filterFilesByStartTime(logLocationList, 100);
+    Assert.assertEquals(3, result.size());
+    Assert.assertEquals(timestamp, result.get(0).getFileCreationTimeMs());
+    Assert.assertEquals(timestamp + 1, result.get(1).getFileCreationTimeMs());
+    Assert.assertEquals(timestamp + 2, result.get(2).getFileCreationTimeMs());
 
-    Assert.assertEquals(ImmutableList.of(base.append("10"),
-                                         base.append("15"),
-                                         base.append("20"),
-                                         base.append("28")),
-                        FileLogReader.getFilesInRange(sortedFiles, 11, 35));
-
-    Assert.assertEquals(ImmutableList.of(base.append("10"),
-                                         base.append("15"),
-                                         base.append("20"),
-                                         base.append("28"),
-                                         base.append("35")),
-                        FileLogReader.getFilesInRange(sortedFiles, 11, 36));
-
-    Assert.assertEquals(ImmutableList.of(base.append("20"),
-                                         base.append("28")),
-                        FileLogReader.getFilesInRange(sortedFiles, 25, 32));
+    result = fileLogReader.filterFilesByStartTime(logLocationList, 98);
+    Assert.assertEquals(3, result.size());
   }
 }
