@@ -24,7 +24,7 @@ import co.cask.cdap.common.ServiceUnavailableException;
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.utils.DirUtils;
-import co.cask.cdap.internal.app.deploy.pipeline.NamespacedImpersonator;
+import co.cask.cdap.internal.app.deploy.pipeline.EntityImpersonator;
 import co.cask.cdap.internal.app.runtime.DefaultEndpointPluginContext;
 import co.cask.cdap.internal.app.runtime.artifact.ArtifactDescriptor;
 import co.cask.cdap.internal.app.runtime.artifact.ArtifactDetail;
@@ -180,9 +180,9 @@ public class PluginService extends AbstractIdleService {
       // todo : shouldn't pass null, should use ArtifactId instead of ArtifactDescriptor so we have namespace.
       this.parentClassLoader =
         artifactRepository.createArtifactClassLoader(
-          // todo : should not pass null to namespaceId, (Temporary)
+          // todo : should not pass null, (Temporary)
           // change Instantiators to accept ArtifactId instead of ArtifactDescriptor
-          parentArtifactDescriptor.getLocation(), new NamespacedImpersonator(null, impersonator));
+          parentArtifactDescriptor.getLocation(), new EntityImpersonator(null, impersonator));
       this.instantiatorInfoMap = new ConcurrentHashMap<>();
       this.pluginDir = DirUtils.createTempDir(stageDir);
     }

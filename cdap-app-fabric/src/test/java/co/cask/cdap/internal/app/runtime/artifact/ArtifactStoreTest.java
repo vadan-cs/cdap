@@ -26,7 +26,7 @@ import co.cask.cdap.common.ArtifactAlreadyExistsException;
 import co.cask.cdap.common.ArtifactNotFoundException;
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.internal.AppFabricTestHelper;
-import co.cask.cdap.internal.app.deploy.pipeline.NamespacedImpersonator;
+import co.cask.cdap.internal.app.deploy.pipeline.EntityImpersonator;
 import co.cask.cdap.internal.app.runtime.artifact.app.inspection.InspectionApp;
 import co.cask.cdap.internal.app.runtime.plugin.PluginNotExistsException;
 import co.cask.cdap.internal.io.ReflectionSchemaGenerator;
@@ -1048,7 +1048,7 @@ public class ArtifactStoreTest {
     Id.Artifact artifactId, ArtifactMeta meta,
     String contents) throws ArtifactAlreadyExistsException, IOException, WriteConflictException {
     artifactStore.write(artifactId, meta, ByteStreams.newInputStreamSupplier(Bytes.toBytes(contents)),
-                        new NamespacedImpersonator(artifactId.getNamespace().toEntityId(),
-                                                   new DefaultImpersonator(CConfiguration.create(), null, null)));
+                        new EntityImpersonator(artifactId.toEntityId(),
+                                               new DefaultImpersonator(CConfiguration.create(), null, null)));
   }
 }

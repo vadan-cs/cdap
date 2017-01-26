@@ -27,7 +27,7 @@ import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.guice.ConfigModule;
 import co.cask.cdap.common.test.AppJarHelper;
 import co.cask.cdap.internal.app.ApplicationSpecificationAdapter;
-import co.cask.cdap.internal.app.deploy.pipeline.NamespacedImpersonator;
+import co.cask.cdap.internal.app.deploy.pipeline.EntityImpersonator;
 import co.cask.cdap.internal.app.runtime.artifact.ArtifactRepository;
 import co.cask.cdap.internal.app.runtime.artifact.CloseableClassLoader;
 import co.cask.cdap.internal.io.ReflectionSchemaGenerator;
@@ -100,8 +100,8 @@ public class ConfiguratorTest {
     // Create a configurator that is testable. Provide it a application.
     try (CloseableClassLoader artifactClassLoader =
            artifactRepo.createArtifactClassLoader(
-             appJar, new NamespacedImpersonator(artifactId.getNamespace().toEntityId(),
-                                                new DefaultImpersonator(cConf, null, null)))) {
+             appJar, new EntityImpersonator(artifactId.toEntityId(),
+                                            new DefaultImpersonator(cConf, null, null)))) {
       Configurator configurator = new InMemoryConfigurator(conf, Id.Namespace.DEFAULT, artifactId,
                                                            WordCountApp.class.getName(), artifactRepo,
                                                            artifactClassLoader, null, "");
@@ -134,8 +134,8 @@ public class ConfiguratorTest {
     // Create a configurator that is testable. Provide it an application.
     try (CloseableClassLoader artifactClassLoader =
            artifactRepo.createArtifactClassLoader(
-             appJar, new NamespacedImpersonator(artifactId.getNamespace().toEntityId(),
-                                                new DefaultImpersonator(cConf, null, null)))) {
+             appJar, new EntityImpersonator(artifactId.toEntityId(),
+                                            new DefaultImpersonator(cConf, null, null)))) {
       Configurator configuratorWithConfig =
         new InMemoryConfigurator(conf, Id.Namespace.DEFAULT, artifactId, ConfigTestApp.class.getName(),
                                  artifactRepo, artifactClassLoader, null, new Gson().toJson(config));

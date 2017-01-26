@@ -34,7 +34,7 @@ import co.cask.cdap.common.utils.DirUtils;
 import co.cask.cdap.common.utils.ImmutablePair;
 import co.cask.cdap.data2.metadata.store.MetadataStore;
 import co.cask.cdap.data2.metadata.system.ArtifactSystemMetadataWriter;
-import co.cask.cdap.internal.app.deploy.pipeline.NamespacedImpersonator;
+import co.cask.cdap.internal.app.deploy.pipeline.EntityImpersonator;
 import co.cask.cdap.internal.app.runtime.plugin.PluginNotExistsException;
 import co.cask.cdap.proto.Id;
 import co.cask.cdap.proto.artifact.ApplicationClass;
@@ -125,13 +125,13 @@ public class ArtifactRepository {
   /**
    * Create a classloader that uses the artifact at the specified location to load classes, with access to
    * packages that all program type has access to.
-   * It delegates to {@link ArtifactClassLoaderFactory#createClassLoader(Location, NamespacedImpersonator)}.
+   * It delegates to {@link ArtifactClassLoaderFactory#createClassLoader(Location, EntityImpersonator)}.
    *
    * @see ArtifactClassLoaderFactory
    */
   public CloseableClassLoader createArtifactClassLoader(
-    Location artifactLocation, NamespacedImpersonator namespacedImpersonator) throws IOException {
-    return artifactClassLoaderFactory.createClassLoader(artifactLocation, namespacedImpersonator);
+    Location artifactLocation, EntityImpersonator entityImpersonator) throws IOException {
+    return artifactClassLoaderFactory.createClassLoader(artifactLocation, entityImpersonator);
   }
 
   /**
@@ -463,17 +463,16 @@ public class ArtifactRepository {
 
     parentArtifacts = parentArtifacts == null ? Collections.<ArtifactRange>emptySet() : parentArtifacts;
     CloseableClassLoader parentClassLoader = null;
-    NamespacedImpersonator namespacedImpersonator = new NamespacedImpersonator(artifactId.getNamespace().toEntityId(),
-                                                                               impersonator);
+    EntityImpersonator entityImpersonator = new EntityImpersonator(artifactId.toEntityId(), impersonator);
     if (!parentArtifacts.isEmpty()) {
       validateParentSet(artifactId, parentArtifacts);
-      parentClassLoader = createParentClassLoader(artifactId, parentArtifacts, namespacedImpersonator);
+      parentClassLoader = createParentClassLoader(artifactId, parentArtifacts, entityImpersonator);
     }
     try {
       ArtifactClasses artifactClasses = inspectArtifact(artifactId, artifactFile, additionalPlugins, parentClassLoader);
       ArtifactMeta meta = new ArtifactMeta(artifactClasses, parentArtifacts, properties);
       ArtifactDetail artifactDetail =
-        artifactStore.write(artifactId, meta, Files.newInputStreamSupplier(artifactFile), namespacedImpersonator);
+        artifactStore.write(artifactId, meta, Files.newInputStreamSupplier(artifactFile), entityImpersonator);
       ArtifactDescriptor descriptor = artifactDetail.getDescriptor();
       // info hides some fields that are available in detail, such as the location of the artifact
       ArtifactInfo artifactInfo = new ArtifactInfo(descriptor.getArtifactId(), artifactDetail.getMeta().getClasses(),
@@ -791,7 +790,7 @@ public class ArtifactRepository {
    * @throws IOException if there was some error reading from the store
    */
   private CloseableClassLoader createParentClassLoader(Id.Artifact artifactId, Set<ArtifactRange> parentArtifacts,
-                                                       NamespacedImpersonator namespacedImpersonator)
+                                                       EntityImpersonator entityImpersonator)
     throws ArtifactRangeNotFoundException, IOException, InvalidArtifactException {
 
     List<ArtifactDetail> parents = new ArrayList<>();
@@ -831,7 +830,7 @@ public class ArtifactRepository {
     // assumes any of the parents will do
     Location parentLocation = parents.get(0).getDescriptor().getLocation();
 
-    return createArtifactClassLoader(parentLocation, namespacedImpersonator);
+    return createArtifactClassLoader(parentLocation, entityImpersonator);
   }
 
   private void addAppSummaries(List<ApplicationClassSummary> summaries, NamespaceId namespace) {

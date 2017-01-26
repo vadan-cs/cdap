@@ -87,8 +87,8 @@ public class LocalArtifactLoaderStage extends AbstractStage<AppDeploymentInfo> {
     String appVersion = deploymentInfo.getApplicationVersion();
     String configString = deploymentInfo.getConfigString();
 
-    NamespacedImpersonator classLoaderImpersonator =
-      new NamespacedImpersonator(artifactId.getParent(), impersonator);
+    EntityImpersonator classLoaderImpersonator =
+      new EntityImpersonator(artifactId, impersonator);
     ClassLoader artifactClassLoader = artifactRepository.createArtifactClassLoader(artifactLocation,
                                                                                    classLoaderImpersonator);
     getContext().setProperty(LocalApplicationManager.ARTIFACT_CLASSLOADER_KEY, artifactClassLoader);

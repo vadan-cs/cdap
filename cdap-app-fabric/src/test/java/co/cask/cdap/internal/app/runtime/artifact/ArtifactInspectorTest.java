@@ -26,7 +26,7 @@ import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.io.Locations;
 import co.cask.cdap.common.test.AppJarHelper;
 import co.cask.cdap.common.utils.DirUtils;
-import co.cask.cdap.internal.app.deploy.pipeline.NamespacedImpersonator;
+import co.cask.cdap.internal.app.deploy.pipeline.EntityImpersonator;
 import co.cask.cdap.internal.app.runtime.artifact.app.InvalidConfigApp;
 import co.cask.cdap.internal.app.runtime.artifact.app.inspection.InspectionApp;
 import co.cask.cdap.internal.io.ReflectionSchemaGenerator;
@@ -78,8 +78,8 @@ public class ArtifactInspectorTest {
     Location artifactLocation = Locations.toLocation(appFile);
     try (CloseableClassLoader artifactClassLoader =
            classLoaderFactory.createClassLoader(
-             artifactLocation, new NamespacedImpersonator(artifactId.getNamespace().toEntityId(),
-                                                          new DefaultImpersonator(CConfiguration.create(),
+             artifactLocation, new EntityImpersonator(artifactId.toEntityId(),
+                                                      new DefaultImpersonator(CConfiguration.create(),
                                                                                   null, null)))) {
       artifactInspector.inspectArtifact(artifactId, appFile, artifactClassLoader);
     }
@@ -96,8 +96,8 @@ public class ArtifactInspectorTest {
     Location artifactLocation = Locations.toLocation(appFile);
     try (CloseableClassLoader artifactClassLoader =
            classLoaderFactory.createClassLoader(
-             artifactLocation, new NamespacedImpersonator(artifactId.getNamespace().toEntityId(),
-                                                          new DefaultImpersonator(CConfiguration.create(),
+             artifactLocation, new EntityImpersonator(artifactId.toEntityId(),
+                                                      new DefaultImpersonator(CConfiguration.create(),
                                                                                   null, null)))) {
 
       ArtifactClasses classes = artifactInspector.inspectArtifact(artifactId, appFile, artifactClassLoader);

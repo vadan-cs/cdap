@@ -17,6 +17,7 @@
 package co.cask.cdap.internal.app.deploy.pipeline;
 
 import co.cask.cdap.proto.id.NamespaceId;
+import co.cask.cdap.proto.id.NamespacedEntityId;
 import co.cask.cdap.security.impersonation.Impersonator;
 
 import java.util.concurrent.Callable;
@@ -24,12 +25,12 @@ import java.util.concurrent.Callable;
 /**
  * Delegates to impersonator's doAs, but uses the namespace passed during initialization.
  */
-public class NamespacedImpersonator {
-  private final NamespaceId namespaceId;
+public class EntityImpersonator {
+  private final NamespacedEntityId entiyId;
   private final Impersonator impersonator;
 
-  public NamespacedImpersonator(NamespaceId namespaceId, Impersonator impersonator) {
-    this.namespaceId = namespaceId;
+  public EntityImpersonator(NamespacedEntityId entiyId, Impersonator impersonator) {
+    this.entiyId = entiyId;
     this.impersonator = impersonator;
   }
 
@@ -39,15 +40,14 @@ public class NamespacedImpersonator {
    * @param callable callable
    * @param <T> callable return type
    * @return result of callable
-   * @throws Exception
    */
   public <T> T impersonate(final Callable<T> callable) throws Exception {
-    // todo(nsquare) namespaceId shouldn't be null, it's passed null only from PluginService. which needs to be updated.
-    if (namespaceId == null || namespaceId.equals(NamespaceId.SYSTEM)) {
+    // todo entityId shouldn't be null, it's passed null only from PluginService. which needs to be updated.
+    if (entiyId == null || entiyId.equals(NamespaceId.SYSTEM)) {
       // do not impersonate for system namespace
       return callable.call();
     }
-    return impersonator.doAs(namespaceId, new Callable<T>() {
+    return impersonator.doAs(entiyId, new Callable<T>() {
       @Override
       public T call() throws Exception {
         return callable.call();
