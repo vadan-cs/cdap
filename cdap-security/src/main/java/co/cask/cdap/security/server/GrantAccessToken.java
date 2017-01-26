@@ -19,6 +19,7 @@ package co.cask.cdap.security.server;
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.common.io.Codec;
+import co.cask.cdap.proto.security.Principal;
 import co.cask.cdap.security.auth.AccessToken;
 import co.cask.cdap.security.auth.AccessTokenIdentifier;
 import co.cask.cdap.security.auth.TokenManager;
@@ -26,14 +27,21 @@ import com.google.common.base.Charsets;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import org.apache.commons.codec.binary.Base64;
+import org.eclipse.jetty.server.Request;
+import org.eclipse.jetty.server.UserIdentity;
 import org.jboss.netty.handler.codec.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import javax.security.auth.Subject;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -113,11 +121,38 @@ public class GrantAccessToken {
     return Response.status(200).build();
   }
 
+  private String[] getGroups (Subject subject) {
+    //get all the roles of the various types
+    String[] roleClassNames = JAASLoginService.defaultRoleClassNames;
+    Collection<String> groups = new LinkedHashSet<>();
+    try {
+      for (String roleClassName : roleClassNames) {
+        Class loadClass = Thread.currentThread().getContextClassLoader().loadClass(roleClassName);
+        Set<Principal> rolesForType = subject.getPrincipals(loadClass);
+        for (Principal principal : rolesForType) {
+          groups.add(principal.getName());
+        }
+      }
+
+      return groups.toArray(new String[groups.size()]);
+    } catch (ClassNotFoundException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   private void grantToken(HttpServletRequest request, HttpServletResponse response, long tokenValidity)
     throws IOException, ServletException {
 
     String username = request.getUserPrincipal().getName();
     List<String> userGroups = Collections.emptyList();
+
+    if (request instanceof Request) {
+      UserIdentity id = ((Request) request).getUserIdentity();
+      String[] groups = getGroups(id.getSubject());
+      LOG.info("nsquare Groups: {}", Arrays.toString(groups));
+    } else {
+      LOG.info("Request type is {}", request.getClass());
+    }
 
     long issueTime = System.currentTimeMillis();
     long expireTime = issueTime + tokenValidity;
