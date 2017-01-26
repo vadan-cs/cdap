@@ -759,7 +759,6 @@ public final class Constants {
     /** Configuration for specifying keytab location. The location will contain ${name} which will be replaced
      * by the user/owner of the entities name. */
     public static final String KEYTAB_PATH = "security.keytab.path";
-    public static final String OWNER_PRINCIPAL = "owner.principal";
 
     /** Key to specify the kerberos principal of the entity owner **/
     public static final String OWNER_PRINCIPAL = "owner.principal";
