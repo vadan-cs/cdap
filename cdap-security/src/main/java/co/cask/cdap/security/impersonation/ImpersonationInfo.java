@@ -48,32 +48,6 @@ public final class ImpersonationInfo {
     this.keytabURI = keytabURI;
   }
 
-  /**
-   * Creates {@link ImpersonationInfo} for the specified Entity. If the info is not configured at the namespace
-   * level, returns the info configured at the cdap level.
-   */
-  public ImpersonationInfo(NamespaceMeta namespaceMeta, CConfiguration cConf) {
-    NamespaceConfig namespaceConfig = namespaceMeta.getConfig();
-
-    String configuredPrincipal = namespaceConfig.getPrincipal();
-    String configuredKeytabURI = namespaceConfig.getKeytabURI();
-
-    if (configuredPrincipal != null && configuredKeytabURI != null) {
-      this.principal = configuredPrincipal;
-      this.keytabURI = configuredKeytabURI;
-    } else if (configuredPrincipal == null && configuredKeytabURI == null) {
-      this.principal = cConf.get(Constants.Security.CFG_CDAP_MASTER_KRB_PRINCIPAL);
-      this.keytabURI = cConf.get(Constants.Security.CFG_CDAP_MASTER_KRB_KEYTAB_PATH);
-    } else {
-      // Ideally, this should never happen, because we make the check upon namespace create.
-      // This can technically happen if someone modifies the namespace store directly (i.e. hbase shell PUT).
-      throw new IllegalStateException(
-        String.format("Either neither or both of the following two configurations must be configured. " +
-                        "Configured principal: %s, Configured keytabURI: %s",
-                      configuredPrincipal, configuredKeytabURI));
-    }
-  }
-
   public String getPrincipal() {
     return principal;
   }
