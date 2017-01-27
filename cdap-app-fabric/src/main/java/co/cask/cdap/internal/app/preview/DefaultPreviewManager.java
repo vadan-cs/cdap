@@ -60,7 +60,7 @@ import co.cask.cdap.security.guice.SecurityModules;
 import co.cask.cdap.security.guice.preview.PreviewSecureStoreModule;
 import co.cask.cdap.security.spi.authorization.AuthorizationEnforcer;
 import co.cask.cdap.security.spi.authorization.PrivilegesManager;
-import co.cask.cdap.store.InMemoryOwnerStore;
+import co.cask.cdap.store.DefaultOwnerStore;
 import co.cask.cdap.store.guice.NamespaceStoreModule;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.cache.Cache;
@@ -234,7 +234,7 @@ public class DefaultPreviewManager implements PreviewManager {
       new AbstractModule() {
         @Override
         protected void configure() {
-          bind(OwnerStore.class).to(InMemoryOwnerStore.class);
+          bind(OwnerStore.class).to(DefaultOwnerStore.class);
           bind(OwnerAdmin.class).to(DefaultOwnerAdmin.class);
         }
 
