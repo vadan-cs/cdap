@@ -18,7 +18,6 @@ package co.cask.cdap.common.kerberos;
 
 import co.cask.cdap.common.conf.CConfiguration;
 import co.cask.cdap.common.conf.Constants;
-import co.cask.cdap.common.conf.SConfiguration;
 import co.cask.cdap.proto.id.KerberosPrincipalId;
 import com.google.common.base.Preconditions;
 import org.apache.hadoop.security.UserGroupInformation;

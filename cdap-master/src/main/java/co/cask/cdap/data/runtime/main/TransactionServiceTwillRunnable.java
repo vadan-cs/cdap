@@ -25,6 +25,8 @@ import co.cask.cdap.common.guice.IOModule;
 import co.cask.cdap.common.guice.KafkaClientModule;
 import co.cask.cdap.common.guice.LocationRuntimeModule;
 import co.cask.cdap.common.guice.ZKClientModule;
+import co.cask.cdap.common.kerberos.DefaultOwnerAdmin;
+import co.cask.cdap.common.kerberos.OwnerAdmin;
 import co.cask.cdap.common.logging.LoggingContextAccessor;
 import co.cask.cdap.common.logging.ServiceLoggingContext;
 import co.cask.cdap.common.namespace.guice.NamespaceClientRuntimeModule;
@@ -129,6 +131,7 @@ public class TransactionServiceTwillRunnable extends AbstractMasterTwillRunnable
         protected void configure() {
           // TransactionService should never need to use UGIProvider. It is simply bound in HBaseQueueAdmin
           bind(UGIProvider.class).to(UnsupportedUGIProvider.class).in(Scopes.SINGLETON);
+          bind(OwnerAdmin.class).to(DefaultOwnerAdmin.class);
         }
       }
     );
