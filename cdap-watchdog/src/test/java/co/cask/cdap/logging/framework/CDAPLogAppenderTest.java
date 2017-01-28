@@ -248,4 +248,3 @@ public class CDAPLogAppenderTest {
     return event;
   }
 }
-
