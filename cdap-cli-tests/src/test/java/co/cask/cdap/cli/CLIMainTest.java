@@ -342,11 +342,23 @@ public class CLIMainTest extends CLITestBase {
   @Test
   public void testDataset() throws Exception {
     String datasetName = PREFIX + "sdf123lkj";
+    String ownedDatasetName = PREFIX + "owned";
 
     DatasetTypeClient datasetTypeClient = new DatasetTypeClient(cliConfig.getClientConfig());
     DatasetTypeMeta datasetType = datasetTypeClient.list(NamespaceId.DEFAULT).get(0);
-    testCommandOutputContains(cli, "create dataset instance " + datasetType.getName() + " " + datasetName + " \"a=1\"",
+    testCommandOutputContains(cli, "create dataset instance " + datasetType.getName() + " " + datasetName +
+                                " properties \"a=1\"", "Successfully created dataset");
+
+    // test creation of a dataset with an owner
+    testCommandOutputContains(cli, "create dataset instance " + datasetType.getName() + " " + ownedDatasetName +
+                                " properties \"a=1\"" + " "  + " description someDescription" + " " +
+                                ArgumentName.OWNER_PRINCIPAL + " " + "alice/somehost.net@somekdc.net",
                               "Successfully created dataset");
+
+    // test describing the table returns the given owner information
+    testCommandOutputContains(cli, "describe dataset instance " + ownedDatasetName, "alice/somehost.net@somekdc.net");
+
+
     testCommandOutputContains(cli, "list dataset instances", FakeDataset.class.getSimpleName());
     testCommandOutputContains(cli, "get dataset instance properties " + datasetName, "\"a\":\"1\"");
 
@@ -372,10 +384,11 @@ public class CLIMainTest extends CLITestBase {
     String datasetName2 = PREFIX + "asoijm39485";
     String description = "test-description-for-" + datasetName2;
     testCommandOutputContains(cli, "create dataset instance " + datasetType.getName() + " " + datasetName2 +
-                                " \"a=1\"" + " " + description,
+                                " properties \"a=1\"" + " description " + description,
                               "Successfully created dataset");
     testCommandOutputContains(cli, "list dataset instances", description);
     testCommandOutputContains(cli, "delete dataset instance " + datasetName2, "Successfully deleted");
+    testCommandOutputContains(cli, "delete dataset instance " + ownedDatasetName, "Successfully deleted");
   }
 
   @Test
