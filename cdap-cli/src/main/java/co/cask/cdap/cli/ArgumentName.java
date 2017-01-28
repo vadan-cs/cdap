@@ -1,5 +1,5 @@
 /*
- * Copyright © 2012-2016 Cask Data, Inc.
+ * Copyright © 2012-2017 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -30,6 +30,7 @@ public enum ArgumentName {
   SERVICE("app-id.service-id"),
   MAPREDUCE("app-id.mapreduce-id"),
   SPARK("app-id.spark-id"),
+  OWNER_PRINCIPAL("owner-principal"),
 
   APP_CONFIG("app-config"),
   APP_CONFIG_FILE("app-config-file"),
