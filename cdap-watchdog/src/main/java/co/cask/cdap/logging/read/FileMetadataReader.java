@@ -33,21 +33,22 @@ import co.cask.cdap.data2.transaction.Transactions;
 import co.cask.cdap.data2.transaction.TxCallable;
 import co.cask.cdap.logging.LoggingConfiguration;
 import co.cask.cdap.logging.framework.LogPathIdentifier;
-import co.cask.cdap.logging.write.FileMetaDataManager;
 import co.cask.cdap.logging.write.LogLocation;
 import co.cask.cdap.proto.id.DatasetId;
 import co.cask.cdap.proto.id.NamespaceId;
+import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.Longs;
 import com.google.inject.Inject;
 import org.apache.tephra.RetryStrategies;
 import org.apache.tephra.TransactionFailureException;
 import org.apache.tephra.TransactionSystemClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -55,8 +56,19 @@ import java.util.Map;
  * Reads meta data about log files from the log meta table.
  */
 public class FileMetadataReader {
-  private static final Logger LOG = LoggerFactory.getLogger(FileMetaDataManager.class);
   private static final byte[] ROW_KEY_PREFIX = Bytes.toBytes(200);
+
+  private static final Comparator<LogLocation> LOG_LOCATION_COMPARATOR = new Comparator<LogLocation>() {
+    @Override
+    public int compare(LogLocation o1, LogLocation o2) {
+      int cmp = Longs.compare(o1.getEventTimeMs(), o2.getEventTimeMs());
+      if (cmp != 0) {
+        return cmp;
+      }
+      // when two log files have same timestamp, we order them by the file creation time
+      return Longs.compare(o1.getFileCreationTimeMs(), o2.getFileCreationTimeMs());
+    }
+  };
 
 
   private final DatasetFramework datasetFramework;
@@ -116,10 +128,12 @@ public class FileMetadataReader {
    * Returns a list of log files for a logging context.
    *
    * @param logPathIdentifier logging context identifier.
+   * @param startTimestampMs starting timestamp in milli seconds
+   * @param endTimestampMs ending timestamp in milli seconds
    * @return List of {@link LogLocation}
    */
   public List<LogLocation> listFiles(final LogPathIdentifier logPathIdentifier,
-                                     final long endTimestampMsFilter) throws Exception {
+                                     final long startTimestampMs, final long endTimestampMs) throws Exception {
 
     return txExecute(transactional, new TxCallable<List<LogLocation>>() {
       @Override
@@ -138,7 +152,7 @@ public class FileMetadataReader {
           // the location can be any location from on the filesystem for custom mapped namespaces
           if (entry.getKey().length == 8) {
             long eventTimestamp = Bytes.toLong(entry.getKey());
-            if (!(eventTimestamp > endTimestampMsFilter)) {
+            if (!(eventTimestamp > endTimestampMs)) {
               // old format
               files.add(new LogLocation(LogLocation.VERSION_0,
                                         eventTimestamp,
@@ -149,7 +163,7 @@ public class FileMetadataReader {
             }
           } else if (entry.getKey().length == 17) {
             long eventTimestamp = Bytes.toLong(entry.getKey(), 1, Bytes.SIZEOF_LONG);
-            if (!(eventTimestamp > endTimestampMsFilter)) {
+            if (!(eventTimestamp > endTimestampMs)) {
               // new format
               files.add(new LogLocation(LogLocation.VERSION_1,
                                         // skip the first (version) byte
@@ -161,9 +175,28 @@ public class FileMetadataReader {
           }
         }
 
-        return files;
+        return getFilesInRange(files, startTimestampMs);
       }
     });
+  }
+
+
+  @VisibleForTesting
+  List<LogLocation> getFilesInRange(List<LogLocation> files, long startTimeInMs) {
+    Collections.sort(files, LOG_LOCATION_COMPARATOR);
+    // iterate the list from the end
+    // we continue when the start timestamp of the log file is higher than the startTimeInMs
+    // when we reach a file where start time is lower than the startTimeInMs we return the list from this index.
+    // if we reach the beginning of the list, we return the entire list.
+    List<LogLocation> filteredList = new ArrayList<>();
+    for (int i = files.size() - 1; i >= 0; i--) {
+      LogLocation logLocation = files.get(i);
+      filteredList.add(0, logLocation);
+      if (logLocation.getEventTimeMs() < startTimeInMs) {
+        return filteredList;
+      }
+    }
+    return filteredList;
   }
 
   // todo : CDAP-8231 copy clean meta data logic here or separate class when implementing log cleanup task

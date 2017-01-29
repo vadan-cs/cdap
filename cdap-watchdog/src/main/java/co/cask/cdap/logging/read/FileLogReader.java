@@ -28,22 +28,17 @@ import co.cask.cdap.logging.filter.AndFilter;
 import co.cask.cdap.logging.filter.Filter;
 import co.cask.cdap.logging.framework.LogPathIdentifier;
 import co.cask.cdap.logging.write.LogLocation;
-import com.google.common.annotations.VisibleForTesting;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Throwables;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.Lists;
-import com.google.common.primitives.Longs;
 import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -78,15 +73,12 @@ public class FileLogReader implements LogReader {
       long fromTimeMs = readRange.getFromMillis() + 1;
 
       LOG.trace("Using fromTimeMs={}, readRange={}", fromTimeMs, readRange);
-      List<LogLocation> filesInRange =
+      List<LogLocation> sortedFilesInRange =
         fileMetadataReader.listFiles(getLogPathIdentifier(loggingContext),
-                                     readRange.getToMillis());
-      if (filesInRange.isEmpty()) {
+                                     readRange.getFromMillis(), readRange.getToMillis());
+      if (sortedFilesInRange.isEmpty()) {
         return;
       }
-
-      List<LogLocation> sortedFilesInRange = filterFilesByStartTime(sortFilesInRange(filesInRange),
-                                                                    readRange.getFromMillis());
 
       for (LogLocation file : sortedFilesInRange) {
         LOG.trace("Reading file {}", file);
@@ -101,39 +93,6 @@ public class FileLogReader implements LogReader {
     }
   }
 
-  @VisibleForTesting
-  List<LogLocation> filterFilesByStartTime(List<LogLocation> files, long startTimeInMs) {
-    // iterate the list from the end
-    // we continue when the start timestamp of the log file is higher than the startTimeInMs
-    // when we reach a file where start time is lower than the startTimeInMs we return the list from this index.
-    // if we reach the beginning of the list, we return the entire list.
-    List<LogLocation> filteredList = new ArrayList<>();
-    for (int i = files.size() - 1; i >= 0; i--) {
-      LogLocation logLocation = files.get(i);
-      filteredList.add(0, logLocation);
-      if (logLocation.getEventTimeMs() < startTimeInMs) {
-        return filteredList;
-      }
-    }
-    return filteredList;
-  }
-
-  @VisibleForTesting
-  List<LogLocation> sortFilesInRange(List<LogLocation> filesInRange) {
-    Collections.sort(filesInRange, new Comparator<LogLocation>() {
-      @Override
-      public int compare(LogLocation o1, LogLocation o2) {
-        int timestampComparison = Longs.compare(o1.getEventTimeMs(), o2.getEventTimeMs());
-        if (timestampComparison == 0) {
-          // when two log files have same timestamp, we order them by the file creation time
-          return Longs.compare(o1.getFileCreationTimeMs(), o2.getFileCreationTimeMs());
-        }
-        return timestampComparison;
-      }
-    });
-    return filesInRange;
-  }
-
   @Override
   public void getLogPrev(final LoggingContext loggingContext, final ReadRange readRange, final int maxEvents,
                          final Filter filter, final Callback callback) {
@@ -143,14 +102,12 @@ public class FileLogReader implements LogReader {
                                                         filter));
 
 
-      List<LogLocation> filesInRange =
+      List<LogLocation> sortedFilesInRange =
         fileMetadataReader.listFiles(getLogPathIdentifier(loggingContext),
-                                     readRange.getToMillis());
-      if (filesInRange.isEmpty()) {
+                                     readRange.getFromMillis(), readRange.getToMillis());
+      if (sortedFilesInRange.isEmpty()) {
         return;
       }
-      List<LogLocation> sortedFilesInRange = filterFilesByStartTime(sortFilesInRange(filesInRange),
-                                                                    readRange.getFromMillis());
 
       long fromTimeMs = readRange.getToMillis() - 1;
 
@@ -189,8 +146,8 @@ public class FileLogReader implements LogReader {
                                                               filter));
 
       LOG.trace("Using fromTimeMs={}, toTimeMs={}", fromTimeMs, toTimeMs);
-      List<LogLocation> files = fileMetadataReader.listFiles(getLogPathIdentifier(loggingContext), toTimeMs);
-      List<LogLocation> sortedFilesInRange = filterFilesByStartTime(sortFilesInRange(files), fromTimeMs);
+      List<LogLocation> sortedFilesInRange = fileMetadataReader.listFiles(getLogPathIdentifier(loggingContext),
+                                                             fromTimeMs, toTimeMs);
 
       if (sortedFilesInRange.isEmpty()) {
         // return empty iterator

@@ -61,7 +61,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Multimap;
-import com.google.common.primitives.Longs;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
@@ -88,8 +87,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -497,29 +494,13 @@ public class LogSaverPluginTest extends KafkaTestBase {
     }
   }
 
-  private static List<LogLocation> sortFilesInRange(List<LogLocation> filesInRange) {
-    Collections.sort(filesInRange, new Comparator<LogLocation>() {
-      @Override
-      public int compare(LogLocation o1, LogLocation o2) {
-        int timestampComparison = Longs.compare(o1.getEventTimeMs(), o2.getEventTimeMs());
-        if (timestampComparison == 0) {
-          // when two log files have same timestamp, we order them by the file creation time
-          return Longs.compare(o1.getFileCreationTimeMs(), o2.getFileCreationTimeMs());
-        }
-        return timestampComparison;
-      }
-    });
-    return filesInRange;
-  }
-
   private static void waitTillLogSaverDone(FileMetadataReader fileMetadataReader, LoggingContext loggingContext,
                                            String logLine) throws Exception {
     long start = System.currentTimeMillis();
 
     while (true) {
       List<LogLocation> files =
-        fileMetadataReader.listFiles(LoggingContextHelper.getLogPathIdentifier(loggingContext), Long.MAX_VALUE);
-      files = sortFilesInRange(files);
+        fileMetadataReader.listFiles(LoggingContextHelper.getLogPathIdentifier(loggingContext), 0, Long.MAX_VALUE);
       if (files.isEmpty()) {
         continue;
       }

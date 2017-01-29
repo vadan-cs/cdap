@@ -142,7 +142,7 @@ public class CDAPLogAppenderTest {
 
     try {
       List<LogLocation> files = fileMetadataReader.listFiles(cdapLogAppender.getLoggingPath(properties),
-                                                             Long.MAX_VALUE);
+                                                             0, Long.MAX_VALUE);
       Assert.assertEquals(1, files.size());
       LogLocation logLocation = files.get(0);
       Assert.assertEquals(LogLocation.VERSION_1, logLocation.getFrameworkVersion());
@@ -210,7 +210,7 @@ public class CDAPLogAppenderTest {
 
     try {
       List<LogLocation> files = fileMetadataReader.listFiles(cdapLogAppender.getLoggingPath(properties),
-                                                             Long.MAX_VALUE);
+                                                             0, Long.MAX_VALUE);
       Assert.assertEquals(2, files.size());
       assertLogEventDetails(event1, files.get(0));
       assertLogEventDetails(event2, files.get(1));
