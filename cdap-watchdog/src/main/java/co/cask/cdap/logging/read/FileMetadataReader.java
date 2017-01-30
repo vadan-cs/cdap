@@ -183,18 +183,27 @@ public class FileMetadataReader {
 
   @VisibleForTesting
   List<LogLocation> getFilesInRange(List<LogLocation> files, long startTimeInMs) {
+
     Collections.sort(files, LOG_LOCATION_COMPARATOR);
     // iterate the list from the end
     // we continue when the start timestamp of the log file is higher than the startTimeInMs
     // when we reach a file where start time is lower than the startTimeInMs we return the list from this index.
     // if we reach the beginning of the list, we return the entire list.
     List<LogLocation> filteredList = new ArrayList<>();
+    long smallestTimestamp = files.get(0).getEventTimeMs();
     for (int i = files.size() - 1; i >= 0; i--) {
       LogLocation logLocation = files.get(i);
-      filteredList.add(0, logLocation);
-      if (logLocation.getEventTimeMs() < startTimeInMs) {
-        return filteredList;
+      long eventTimestamp = logLocation.getEventTimeMs();
+      if (eventTimestamp < startTimeInMs) {
+        if (eventTimestamp < smallestTimestamp) {
+          return filteredList;
+        } else {
+          // assign the timestamp to smallest timestamp,
+          // this allows us to add the previous files with the same event timestamp to the list before returning.
+          smallestTimestamp = eventTimestamp;
+        }
       }
+      filteredList.add(0, logLocation);
     }
     return filteredList;
   }
