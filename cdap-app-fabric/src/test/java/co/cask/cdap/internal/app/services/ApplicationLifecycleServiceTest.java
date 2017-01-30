@@ -25,20 +25,29 @@ import co.cask.cdap.common.test.AppJarHelper;
 import co.cask.cdap.internal.app.deploy.ProgramTerminator;
 import co.cask.cdap.internal.app.runtime.artifact.ArtifactRepository;
 import co.cask.cdap.internal.app.services.http.AppFabricTestBase;
+import co.cask.cdap.proto.ApplicationDetail;
 import co.cask.cdap.proto.Id;
 import co.cask.cdap.proto.ProgramRunStatus;
 import co.cask.cdap.proto.ProgramType;
 import co.cask.cdap.proto.id.ApplicationId;
+import co.cask.cdap.proto.id.KerberosPrincipalId;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.proto.id.ProgramId;
 import com.google.common.io.Files;
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
 import org.apache.twill.filesystem.Location;
 import org.apache.twill.filesystem.LocationFactory;
+import org.jboss.netty.handler.codec.http.HttpResponseStatus;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import javax.security.auth.kerberos.KerberosPrincipal;
 
 /**
  */
@@ -71,7 +80,7 @@ public class ApplicationLifecycleServiceTest extends AppFabricTestBase {
 
     try {
       applicationLifecycleService.deployAppAndArtifact(NamespaceId.DEFAULT, "appName", artifactId, appJarFile, null,
-                                                       new ProgramTerminator() {
+                                                       null, new ProgramTerminator() {
           @Override
           public void stop(ProgramId programId) throws Exception {
             // no-op
@@ -111,5 +120,25 @@ public class ApplicationLifecycleServiceTest extends AppFabricTestBase {
     stopProgram(wordcountFlow1.toId());
     waitState(wordcountFlow1.toId(), "STOPPED");
     deleteApp(testNSAppId.toId(), 200);
+  }
+
+  @Test
+  public void testOwner() throws Exception {
+    KerberosPrincipalId ownerPrincipal = new KerberosPrincipalId("alice/somehost.net@somekdc.net");
+    HttpResponse response = deploy(WordCountApp.class, Constants.Gateway.API_VERSION_3_TOKEN, TEST_NAMESPACE1,
+                                   ownerPrincipal);
+    Assert.assertEquals(HttpResponseStatus.OK.getCode(), response.getStatusLine().getStatusCode());
+
+    // trying to redeploy the same app as a different owner should fail
+    response = deploy(WordCountApp.class, Constants.Gateway.API_VERSION_3_TOKEN, TEST_NAMESPACE1,
+                                   new KerberosPrincipalId("bob/somehost.net@somekdc.net"));
+    Assert.assertEquals(HttpResponseStatus.BAD_REQUEST.getCode(),
+                        response.getStatusLine().getStatusCode());
+
+    // although trying to re-deploy the app with same owner should work
+    response = deploy(WordCountApp.class, Constants.Gateway.API_VERSION_3_TOKEN, TEST_NAMESPACE1,
+                                   ownerPrincipal);
+    Assert.assertEquals(HttpResponseStatus.OK.getCode(), response.getStatusLine().getStatusCode());
+
   }
 }

@@ -23,11 +23,13 @@ import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.data2.dataset2.DatasetFramework;
 import co.cask.cdap.internal.dataset.DatasetCreationSpec;
 import co.cask.cdap.proto.id.DatasetId;
+import co.cask.cdap.proto.id.KerberosPrincipalId;
 import co.cask.cdap.proto.id.NamespaceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Creates dataset instances.
@@ -49,7 +51,8 @@ final class DatasetInstanceCreator {
    * @param namespaceId the namespace to create the dataset instance in
    * @param datasets the datasets to create
    */
-  void createInstances(NamespaceId namespaceId, Map<String, DatasetCreationSpec> datasets) throws Exception {
+  void createInstances(NamespaceId namespaceId, Map<String, DatasetCreationSpec> datasets,
+                       @Nullable KerberosPrincipalId ownerPrincipal) throws Exception {
     // create dataset instances
     for (Map.Entry<String, DatasetCreationSpec> instanceEntry : datasets.entrySet()) {
       String instanceName = instanceEntry.getKey();
@@ -58,7 +61,8 @@ final class DatasetInstanceCreator {
       DatasetSpecification existingSpec = datasetFramework.getDatasetSpec(instanceId);
       if (existingSpec == null) {
         LOG.info("Adding dataset instance: {}", instanceName);
-        datasetFramework.addInstance(instanceSpec.getTypeName(), instanceId, instanceSpec.getProperties());
+        datasetFramework.addInstance(instanceSpec.getTypeName(), instanceId, instanceSpec.getProperties(),
+                                     ownerPrincipal);
       } else {
         if (!existingSpec.getType().equals(instanceSpec.getTypeName())) {
           throw new IncompatibleUpdateException(

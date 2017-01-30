@@ -114,6 +114,6 @@ public class LocalArtifactLoaderStage extends AbstractStage<AppDeploymentInfo> {
     }
     emit(new ApplicationDeployable(deploymentInfo.getArtifactId(), deploymentInfo.getArtifactLocation(),
                                    applicationId, specification, store.getApplication(applicationId),
-                                   ApplicationDeployScope.USER));
+                                   ApplicationDeployScope.USER, deploymentInfo.getOwnerPrincipal()));
   }
 }

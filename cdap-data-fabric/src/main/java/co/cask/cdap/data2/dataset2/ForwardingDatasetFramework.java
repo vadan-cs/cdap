@@ -30,6 +30,7 @@ import co.cask.cdap.proto.id.DatasetId;
 import co.cask.cdap.proto.id.DatasetModuleId;
 import co.cask.cdap.proto.id.DatasetTypeId;
 import co.cask.cdap.proto.id.EntityId;
+import co.cask.cdap.proto.id.KerberosPrincipalId;
 import co.cask.cdap.proto.id.NamespaceId;
 import org.apache.twill.filesystem.Location;
 
@@ -74,7 +75,14 @@ public class ForwardingDatasetFramework implements DatasetFramework {
   @Override
   public void addInstance(String datasetTypeName, DatasetId datasetInstanceId, DatasetProperties props)
     throws DatasetManagementException, IOException {
-    delegate.addInstance(datasetTypeName, datasetInstanceId, props);
+    addInstance(datasetTypeName, datasetInstanceId, props, null);
+  }
+
+  @Override
+  public void addInstance(String datasetTypeName, DatasetId datasetInstanceId, DatasetProperties props,
+                          @Nullable KerberosPrincipalId ownerPrincipal)
+    throws DatasetManagementException, IOException {
+    delegate.addInstance(datasetTypeName, datasetInstanceId, props, ownerPrincipal);
   }
 
   @Override

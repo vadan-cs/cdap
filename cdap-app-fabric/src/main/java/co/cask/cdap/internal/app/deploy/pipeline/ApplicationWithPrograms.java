@@ -32,7 +32,8 @@ public class ApplicationWithPrograms extends ApplicationDeployable {
                                  Iterable<? extends ProgramDescriptor> programDescriptors) {
     super(applicationDeployable.getArtifactId(), applicationDeployable.getArtifactLocation(),
           applicationDeployable.getApplicationId(), applicationDeployable.getSpecification(),
-          applicationDeployable.getExistingAppSpec(), applicationDeployable.getApplicationDeployScope());
+          applicationDeployable.getExistingAppSpec(), applicationDeployable.getApplicationDeployScope(),
+          applicationDeployable.getOwnerPrincipal());
     this.programDescriptors = ImmutableList.copyOf(programDescriptors);
   }
 

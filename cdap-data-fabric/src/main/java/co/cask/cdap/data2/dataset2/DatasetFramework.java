@@ -37,6 +37,7 @@ import co.cask.cdap.proto.id.DatasetId;
 import co.cask.cdap.proto.id.DatasetModuleId;
 import co.cask.cdap.proto.id.DatasetTypeId;
 import co.cask.cdap.proto.id.EntityId;
+import co.cask.cdap.proto.id.KerberosPrincipalId;
 import co.cask.cdap.proto.id.NamespaceId;
 import com.google.common.annotations.VisibleForTesting;
 import org.apache.twill.filesystem.Location;
@@ -135,6 +136,9 @@ public interface DatasetFramework {
    */
   void addInstance(String datasetTypeName, DatasetId datasetInstanceId, DatasetProperties props)
     throws DatasetManagementException, IOException;
+
+  void addInstance(String datasetTypeName, DatasetId datasetInstanceId, DatasetProperties props,
+                   @Nullable KerberosPrincipalId ownerPrincipal) throws DatasetManagementException, IOException;
 
   /**
    * Updates the existing dataset instance in the system.

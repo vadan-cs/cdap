@@ -28,6 +28,7 @@ import co.cask.cdap.data2.dataset2.ForwardingProgramContextAwareDatasetFramework
 import co.cask.cdap.data2.metadata.lineage.AccessType;
 import co.cask.cdap.proto.id.DatasetId;
 import co.cask.cdap.proto.id.EntityId;
+import co.cask.cdap.proto.id.KerberosPrincipalId;
 import com.google.common.base.Function;
 
 import java.io.IOException;
@@ -90,7 +91,14 @@ public class NameMappedDatasetFramework extends ForwardingProgramContextAwareDat
   @Override
   public void addInstance(String datasetTypeName, DatasetId datasetInstanceId, DatasetProperties props)
     throws IOException, DatasetManagementException {
-    super.addInstance(datasetTypeName, getMappedDatasetInstance(datasetInstanceId), props);
+    addInstance(datasetTypeName, datasetInstanceId, props, null);
+  }
+
+  @Override
+  public void addInstance(String datasetTypeName, DatasetId datasetInstanceId, DatasetProperties props,
+                          @Nullable KerberosPrincipalId ownerPrincipal)
+    throws IOException, DatasetManagementException {
+    super.addInstance(datasetTypeName, getMappedDatasetInstance(datasetInstanceId), props, ownerPrincipal);
   }
 
   @Override

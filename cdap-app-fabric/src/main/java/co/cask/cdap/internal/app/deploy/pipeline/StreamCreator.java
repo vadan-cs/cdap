@@ -19,15 +19,18 @@ package co.cask.cdap.internal.app.deploy.pipeline;
 import co.cask.cdap.api.data.stream.StreamSpecification;
 import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.data2.transaction.stream.StreamAdmin;
+import co.cask.cdap.proto.id.KerberosPrincipalId;
 import co.cask.cdap.proto.id.NamespaceId;
+import com.google.gson.Gson;
 
 import java.util.Properties;
+import javax.annotation.Nullable;
 
 /**
  * Creates streams.
  */
 final class StreamCreator {
-
+  private static final Gson GSON = new Gson();
   private final StreamAdmin streamAdmin;
 
   StreamCreator(StreamAdmin streamAdmin) {
@@ -41,11 +44,15 @@ final class StreamCreator {
    * @param streamSpecs the set of stream specifications for streams to be created
    * @throws Exception if there was an exception creating a stream
    */
-  void createStreams(NamespaceId namespaceId, Iterable<StreamSpecification> streamSpecs) throws Exception {
+  void createStreams(NamespaceId namespaceId, Iterable<StreamSpecification> streamSpecs,
+                     @Nullable KerberosPrincipalId ownerPrincipal) throws Exception {
     for (StreamSpecification spec : streamSpecs) {
       Properties props = new Properties();
       if (spec.getDescription() != null) {
         props.put(Constants.Stream.DESCRIPTION, spec.getDescription());
+      }
+      if (ownerPrincipal != null) {
+        props.put(Constants.Security.OWNER_PRINCIPAL, GSON.toJson(ownerPrincipal));
       }
       streamAdmin.create(namespaceId.stream(spec.getName()), props);
     }

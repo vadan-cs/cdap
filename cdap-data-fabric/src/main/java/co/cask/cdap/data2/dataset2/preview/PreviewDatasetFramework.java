@@ -34,6 +34,7 @@ import co.cask.cdap.proto.id.DatasetId;
 import co.cask.cdap.proto.id.DatasetModuleId;
 import co.cask.cdap.proto.id.DatasetTypeId;
 import co.cask.cdap.proto.id.EntityId;
+import co.cask.cdap.proto.id.KerberosPrincipalId;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.proto.security.Principal;
 import co.cask.cdap.security.spi.authentication.AuthenticationContext;
@@ -145,6 +146,13 @@ public class PreviewDatasetFramework implements DatasetFramework {
   public void addInstance(String datasetTypeName, DatasetId datasetInstanceId,
                           DatasetProperties props) throws DatasetManagementException, IOException {
     localDatasetFramework.addInstance(datasetTypeName, datasetInstanceId, props);
+  }
+
+  @Override
+  public void addInstance(String datasetTypeName, DatasetId datasetInstanceId,
+                          DatasetProperties props,
+                          @Nullable KerberosPrincipalId ownerPrincipal) throws DatasetManagementException, IOException {
+    throw new UnsupportedOperationException("Creating dataset instance with owner is not supported");
   }
 
   @Override

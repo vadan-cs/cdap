@@ -43,6 +43,7 @@ import co.cask.cdap.proto.id.DatasetId;
 import co.cask.cdap.proto.id.DatasetModuleId;
 import co.cask.cdap.proto.id.DatasetTypeId;
 import co.cask.cdap.proto.id.EntityId;
+import co.cask.cdap.proto.id.KerberosPrincipalId;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.security.spi.authentication.AuthenticationContext;
 import com.google.common.base.Objects;
@@ -141,8 +142,15 @@ public class RemoteDatasetFramework implements DatasetFramework {
   @Override
   public void addInstance(String datasetType, DatasetId datasetInstanceId, DatasetProperties props)
     throws DatasetManagementException {
+    addInstance(datasetType, datasetInstanceId, props, null);
+  }
+
+  @Override
+  public void addInstance(String datasetType, DatasetId datasetInstanceId, DatasetProperties props,
+                          @Nullable KerberosPrincipalId ownerPrincipal)
+    throws DatasetManagementException {
     clientCache.getUnchecked(datasetInstanceId.getParent())
-      .addInstance(datasetInstanceId.getEntityName(), datasetType, props);
+      .addInstance(datasetInstanceId.getEntityName(), datasetType, props, ownerPrincipal);
   }
 
   @Override

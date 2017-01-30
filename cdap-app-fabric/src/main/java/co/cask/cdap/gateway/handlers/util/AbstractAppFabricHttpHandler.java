@@ -18,6 +18,7 @@ package co.cask.cdap.gateway.handlers.util;
 
 import co.cask.cdap.app.runtime.ProgramRuntimeService;
 import co.cask.cdap.common.BadRequestException;
+import co.cask.cdap.common.conf.Constants;
 import co.cask.cdap.internal.UserErrors;
 import co.cask.cdap.internal.UserMessages;
 import co.cask.cdap.proto.Instances;
@@ -72,6 +73,8 @@ public abstract class AbstractAppFabricHttpHandler extends AbstractHttpHandler {
   public static final String ARCHIVE_NAME_HEADER = "X-Archive-Name";
 
   public static final String APP_CONFIG_HEADER = "X-App-Config";
+
+  public static final String OWNER_PRINCIPAL_HEADER = "X-Owner-Principal";
 
   protected int getInstances(HttpRequest request) throws BadRequestException {
     Instances instances;

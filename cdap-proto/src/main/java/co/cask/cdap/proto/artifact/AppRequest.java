@@ -17,6 +17,8 @@
 package co.cask.cdap.proto.artifact;
 
 import co.cask.cdap.proto.artifact.preview.PreviewConfig;
+import co.cask.cdap.proto.id.KerberosPrincipalId;
+import com.google.gson.annotations.SerializedName;
 
 import javax.annotation.Nullable;
 
@@ -29,19 +31,31 @@ public class AppRequest<T> {
   private final ArtifactSummary artifact;
   private final T config;
   private final PreviewConfig preview;
+  @SerializedName("owner.principal")
+  private final KerberosPrincipalId ownerPrincipal;
 
   public AppRequest(ArtifactSummary artifact) {
     this(artifact, null);
   }
 
   public AppRequest(ArtifactSummary artifact, @Nullable T config) {
-    this(artifact, config, null);
+    this(artifact, config, null, null);
   }
 
   public AppRequest(ArtifactSummary artifact, @Nullable T config, @Nullable PreviewConfig preview) {
+    this(artifact, config, preview, null);
+  }
+
+  public AppRequest(ArtifactSummary artifact, @Nullable T config, @Nullable KerberosPrincipalId ownerPrincipal) {
+    this(artifact, config, null, ownerPrincipal);
+  }
+
+  public AppRequest(ArtifactSummary artifact, @Nullable T config, @Nullable PreviewConfig preview,
+                    @Nullable KerberosPrincipalId ownerPrincipal) {
     this.artifact = artifact;
     this.config = config;
     this.preview = preview;
+    this.ownerPrincipal = ownerPrincipal;
   }
 
   public ArtifactSummary getArtifact() {
@@ -56,5 +70,10 @@ public class AppRequest<T> {
   @Nullable
   public PreviewConfig getPreview() {
     return preview;
+  }
+
+  @Nullable
+  public KerberosPrincipalId getOwnerPrincipal() {
+    return ownerPrincipal;
   }
 }

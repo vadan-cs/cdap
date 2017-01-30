@@ -169,9 +169,15 @@ public class AppFabricTestHelper {
 
   public static void deployApplication(Id.Namespace namespace, Class<?> applicationClz,
                                        @Nullable String config, CConfiguration cConf) throws Exception {
+    deployApplication(namespace, applicationClz, config, null, cConf);
+  }
+
+  public static void deployApplication(Id.Namespace namespace, Class<?> applicationClz,
+                                       @Nullable String config, @Nullable String ownerPrincipal,
+                                       CConfiguration cConf) throws Exception {
     ensureNamespaceExists(namespace.toEntityId(), cConf);
     AppFabricClient appFabricClient = getInjector(cConf).getInstance(AppFabricClient.class);
-    Location deployedJar = appFabricClient.deployApplication(namespace, applicationClz, config);
+    Location deployedJar = appFabricClient.deployApplication(namespace, applicationClz, config, ownerPrincipal);
     deployedJar.delete(true);
   }
 

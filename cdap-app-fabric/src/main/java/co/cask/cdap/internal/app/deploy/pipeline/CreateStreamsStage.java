@@ -43,7 +43,8 @@ public class CreateStreamsStage extends AbstractStage<ApplicationDeployable> {
   public void process(ApplicationDeployable input) throws Exception {
     // create stream instances
     ApplicationSpecification specification = input.getSpecification();
-    streamCreator.createStreams(input.getApplicationId().getParent(), specification.getStreams().values());
+    streamCreator.createStreams(input.getApplicationId().getParent(), specification.getStreams().values(),
+                                input.getOwnerPrincipal());
 
     // Emit the input to next stage.
     emit(input);
