@@ -71,7 +71,6 @@ public class MessageTableRegionObserver extends BaseRegionObserver {
   private int prefixLength;
   private TransactionStateCache txStateCache;
 
-  private HTableNameConverter nameConverter;
   private String metadataTableNamespace;
   private String hbaseNamespacePrefix;
   private CConfigurationReader cConfReader;
@@ -143,12 +142,12 @@ public class MessageTableRegionObserver extends BaseRegionObserver {
   }
 
   private TopicMetadataCache createTopicMetadataCache(RegionCoprocessorEnvironment env) {
-    return new TopicMetadataCache(env, cConfReader, nameConverter, hbaseNamespacePrefix, metadataTableNamespace,
+    return new TopicMetadataCache(env, cConfReader, hbaseNamespacePrefix, metadataTableNamespace,
                                   new HBase10ScanBuilder());
   }
 
   private Supplier<TransactionStateCache> getTransactionStateCacheSupplier(String tablePrefix, Configuration conf) {
-    String sysConfigTablePrefix = nameConverter.getSysConfigTablePrefix(tablePrefix);
+    String sysConfigTablePrefix = HTableNameConverter.getSysConfigTablePrefix(tablePrefix);
     return new DefaultTransactionStateCacheSupplier(sysConfigTablePrefix, conf);
   }
 

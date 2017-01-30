@@ -60,7 +60,6 @@ public class DefaultTransactionProcessor extends TransactionProcessor {
 
   @Override
   public void start(CoprocessorEnvironment e) throws IOException {
-    super.start(e);
     if (e instanceof RegionCoprocessorEnvironment) {
       RegionCoprocessorEnvironment env = (RegionCoprocessorEnvironment) e;
       HTableDescriptor tableDesc = env.getRegion().getTableDesc();
@@ -69,6 +68,9 @@ public class DefaultTransactionProcessor extends TransactionProcessor {
       this.sysConfigTablePrefix = HTableNameConverter.getSysConfigTablePrefix(hbaseNamespacePrefix);
       this.cConfCache = createCConfCache(env);
     }
+    // Need to create the cConf cache before calling start on the parent, since it is required for
+    // initializing some properties in the parent class.
+    super.start(e);
   }
 
   @Override
@@ -117,7 +119,7 @@ public class DefaultTransactionProcessor extends TransactionProcessor {
   }
 
   private CConfigurationCache getCConfCache(RegionCoprocessorEnvironment env) {
-    if (!cConfCache.isAlive()) {
+    if (cConfCache == null || (!cConfCache.isAlive())) {
       cConfCache = createCConfCache(env);
     }
     return cConfCache;

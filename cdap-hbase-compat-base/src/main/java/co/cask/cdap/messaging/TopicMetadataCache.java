@@ -57,7 +57,6 @@ public class TopicMetadataCache {
 
   private final RegionCoprocessorEnvironment env;
   private final CConfigurationReader cConfReader;
-  private final HTableNameConverter nameConverter;
   private final String hbaseNamespacePrefix;
   private final String metadataTableNamespace;
   private final ScanBuilder scanBuilder;
@@ -71,11 +70,9 @@ public class TopicMetadataCache {
   private CConfiguration cConf;
 
   public TopicMetadataCache(RegionCoprocessorEnvironment env, CConfigurationReader cConfReader,
-                            HTableNameConverter nameConverter, String hbaseNamespacePrefix,
-                            String metadataTableNamespace, ScanBuilder scanBuilder) {
+                            String hbaseNamespacePrefix, String metadataTableNamespace, ScanBuilder scanBuilder) {
     this.env = env;
     this.cConfReader = cConfReader;
-    this.nameConverter = nameConverter;
     this.hbaseNamespacePrefix = hbaseNamespacePrefix;
     this.metadataTableNamespace = metadataTableNamespace;
     this.scanBuilder = scanBuilder;
@@ -159,8 +156,8 @@ public class TopicMetadataCache {
 
   private HTableInterface getMetadataTable(CConfiguration cConf) throws IOException {
     String tableName = cConf.get(Constants.MessagingSystem.METADATA_TABLE_NAME);
-    return env.getTable(nameConverter.toTableName(hbaseNamespacePrefix,
-                                                  TableId.from(metadataTableNamespace, tableName)));
+    return env.getTable(HTableNameConverter.toTableName(hbaseNamespacePrefix,
+                                                        TableId.from(metadataTableNamespace, tableName)));
   }
 
   private void startRefreshThread() {
