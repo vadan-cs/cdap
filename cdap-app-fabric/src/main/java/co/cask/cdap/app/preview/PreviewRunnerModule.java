@@ -127,8 +127,8 @@ public class PreviewRunnerModule extends PrivateModule {
 
     bind(UGIProvider.class).to(UnsupportedUGIProvider.class);
     expose(UGIProvider.class);
-    bind(OwnerAdmin.class).to(DefaultOwnerAdmin.class);
-    expose(OwnerAdmin.class);
+//    bind(OwnerAdmin.class).to(DefaultOwnerAdmin.class);
+//    expose(OwnerAdmin.class);
 
     bind(RuntimeStore.class).to(DefaultStore.class);
     expose(RuntimeStore.class);
