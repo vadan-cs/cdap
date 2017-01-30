@@ -25,7 +25,6 @@ import co.cask.cdap.cli.util.AbstractAuthCommand;
 import co.cask.cdap.cli.util.ArgumentParser;
 import co.cask.cdap.client.DatasetClient;
 import co.cask.cdap.proto.DatasetInstanceConfiguration;
-import co.cask.cdap.proto.id.KerberosPrincipalId;
 import co.cask.common.cli.Arguments;
 import com.google.gson.Gson;
 import com.google.inject.Inject;
@@ -53,42 +52,29 @@ public class CreateDatasetInstanceCommand extends AbstractAuthCommand {
     String datasetName = arguments.get(ArgumentName.NEW_DATASET.toString());
     String datasetPropertiesString = arguments.getOptional(ArgumentName.DATASET_PROPERTIES.toString(), "");
     String datasetDescription = arguments.getOptional(ArgumentName.DATASET_DESCRIPTON.toString(), null);
-    String datasetOwner = arguments.getOptional(ArgumentName.OWNER_PRINCIPAL.toString(), null);
-    KerberosPrincipalId ownerPrincipal = datasetOwner != null ? new KerberosPrincipalId(datasetOwner) : null;
-
     Map<String, String> datasetProperties = ArgumentParser.parseMap(datasetPropertiesString);
+    // TODO: CDAP-8110 (Rohit) Support owner principal in CLI by deprecating this command and introducing a more user
+    // friendly create dataset instance command
     DatasetInstanceConfiguration datasetConfig =
-      new DatasetInstanceConfiguration(datasetType, datasetProperties, datasetDescription, ownerPrincipal);
+      new DatasetInstanceConfiguration(datasetType, datasetProperties, datasetDescription, null);
 
     datasetClient.create(cliConfig.getCurrentNamespace().dataset(datasetName), datasetConfig);
-    StringBuilder builder = new StringBuilder(String.format("Successfully created dataset named '%s' with type " +
-                                                              "'%s', properties '%s'", datasetName, datasetType,
-                                                            GSON.toJson(datasetProperties)));
-    if (datasetDescription != null) {
-      builder.append(String.format(", description '%s'", datasetDescription));
-    }
-    if (datasetOwner != null) {
-      builder.append(String.format(", owner principal '%s'", datasetOwner));
-    }
-    output.printf(builder.toString());
+    output.printf("Successfully created dataset named '%s' with type '%s' and properties '%s'",
+                  datasetName, datasetType, GSON.toJson(datasetProperties));
     output.println();
   }
 
   @Override
   public String getPattern() {
-    return String.format("create dataset instance <%s> <%s> [properties <%s>] [description <%s>] " +
-                           "[owner-principal <%s>]", ArgumentName.DATASET_TYPE, ArgumentName.NEW_DATASET,
-                         ArgumentName.DATASET_PROPERTIES, ArgumentName.DATASET_DESCRIPTON,
-                         ArgumentName.OWNER_PRINCIPAL);
+    return String.format("create dataset instance <%s> <%s> [<%s>] [<%s>]",
+                         ArgumentName.DATASET_TYPE, ArgumentName.NEW_DATASET, ArgumentName.DATASET_PROPERTIES,
+                         ArgumentName.DATASET_DESCRIPTON);
   }
 
   @Override
   public String getDescription() {
-    return String.format("Creates %s instance of the specified %s. Can optionally take %s, %s, or %s where '<%s>' " +
-                           "is in the format 'key1=val1 key2=val2' and '<%s>' is the Kerberos principal of the owner " +
-                           "of the dataset.",
-                         Fragment.of(Article.A, ElementType.DATASET.getName()), ArgumentName.DATASET_TYPE,
-                         ArgumentName.DATASET_PROPERTIES, ArgumentName.DATASET_DESCRIPTON,
-                         ArgumentName.OWNER_PRINCIPAL, ArgumentName.DATASET_PROPERTIES, ArgumentName.OWNER_PRINCIPAL);
+    return String.format("Creates %s. '<%s>' is in the format 'key1=val1 key2=val2'.",
+                         Fragment.of(Article.A, ElementType.DATASET.getName()),
+                         ArgumentName.DATASET_PROPERTIES);
   }
 }

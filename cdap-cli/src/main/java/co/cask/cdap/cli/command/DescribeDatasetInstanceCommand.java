@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2017 Cask Data, Inc.
+ * Copyright © 2015 Cask Data, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -56,12 +56,12 @@ public class DescribeDatasetInstanceCommand extends AbstractAuthCommand {
     DatasetMeta meta = datasetClient.get(instance);
 
     Table table = Table.builder()
-      .setHeader("hive table", "spec", "type", ArgumentName.OWNER_PRINCIPAL.toString())
+      .setHeader("hive table", "spec", "type")
       .setRows(ImmutableList.of(meta), new RowMaker<DatasetMeta>() {
         @Override
         public List<?> makeRow(DatasetMeta object) {
           return Lists.newArrayList(object.getHiveTableName(), GSON.toJson(object.getSpec()),
-                                    GSON.toJson(object.getType()), GSON.toJson(object.getOwnerPrincipal()));
+                                    GSON.toJson(object.getType()));
         }
       }).build();
     cliConfig.getTableRenderer().render(cliConfig, output, table);
