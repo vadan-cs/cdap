@@ -106,7 +106,7 @@ public class ConsumerConfigCache {
 
   @Nullable
   public CConfiguration getCConf() {
-    return conf;
+    return (conf != null) ? CConfiguration.copy(conf) : null;
   }
 
   @Nullable
@@ -118,8 +118,9 @@ public class ConsumerConfigCache {
     long now = System.currentTimeMillis();
     if (this.conf == null || now > (lastConfigUpdate + CONFIG_UPDATE_FREQUENCY)) {
       try {
-        this.conf = cConfReader.read();
-        if (this.conf != null) {
+        CConfiguration conf = cConfReader.read();
+        if (conf != null) {
+          this.conf = conf;
           LOG.info("Reloaded CConfiguration at {}", now);
           this.lastConfigUpdate = now;
           long configUpdateFrequency = conf.getLong(QueueConstants.QUEUE_CONFIG_UPDATE_FREQUENCY,

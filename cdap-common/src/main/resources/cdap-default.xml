@@ -656,7 +656,7 @@
 
   <property>
     <name>data.tx.prune.plugins</name>
-    <value>co.cask.data2.txprune.DefaultHBaseTransactionPruningPlugin</value>
+    <value>data.tx.DefaultHBaseTransactionPruningPlugin</value>
     <description>
       List of Transaction Pruning Plugins for CDAP HBase Tables that use transaction functionality
       to skip or clean invalid data.
@@ -664,7 +664,7 @@
   </property>
 
   <property>
-    <name>co.cask.data2.txprune.DefaultHBaseTransactionPruningPlugin.class</name>
+    <name>data.tx.DefaultHBaseTransactionPruningPlugin.class</name>
     <value>co.cask.data2.txprune.DefaultHBaseTransactionPruningPlugin</value>
     <description>
       Class name for the TransactionPruningPlugin.
