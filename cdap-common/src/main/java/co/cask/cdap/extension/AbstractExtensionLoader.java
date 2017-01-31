@@ -128,7 +128,9 @@ public abstract class AbstractExtensionLoader<EXTENSION_TYPE, EXTENSION> {
       }
 
       // Each module would be under a directory of the extension directory
-      for (File moduleDir : DirUtils.listFiles(extDir)) {
+      List<File> dirs = DirUtils.listFiles(extDir);
+      Collections.sort(dirs);
+      for (File moduleDir : dirs) {
         if (!moduleDir.isDirectory()) {
           continue;
         }
