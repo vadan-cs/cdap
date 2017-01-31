@@ -76,7 +76,7 @@ public class ImpersonationHandler extends AbstractHttpHandler {
       throw new BadRequestException("Request body is empty.");
     }
     ImpersonationInfo impersonationInfo = GSON.fromJson(requestContent, ImpersonationInfo.class);
-
+    LOG.info("nsquare: Credentials for {}", impersonationInfo);
     UserGroupInformation ugi = ugiProvider.getConfiguredUGI(impersonationInfo);
     Credentials credentials = ImpersonationUtils.doAs(ugi, new Callable<Credentials>() {
       @Override
@@ -88,6 +88,7 @@ public class ImpersonationHandler extends AbstractHttpHandler {
 
     // example: hdfs:///cdap/credentials
     Location credentialsDir = locationFactory.create("credentials");
+    LOG.info("nsquare: Before creating credentails dir {}", credentialsDir);
     Preconditions.checkState(credentialsDir.mkdirs());
 
     // the getTempFile() doesn't create the file within the directory that you call it on. It simply appends the path

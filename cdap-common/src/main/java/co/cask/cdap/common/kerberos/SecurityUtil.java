@@ -199,6 +199,12 @@ public final class SecurityUtil {
     getKerberosName(principalId);
   }
 
+  /**
+   * @param principal The principal whose KeytabURI is being looked up
+   * @param cConf To lookup the configured path for the keytabs
+   * @return The location of the keytab
+   * @throws IOException If the principal is not a valid kerberos principal
+   */
   public static String getKeytabURIforPrincipal(String principal, CConfiguration cConf) throws IOException {
     String confPath = cConf.get(Constants.Security.KEYTAB_PATH);
     String name = new KerberosName(principal).getShortName();

@@ -78,6 +78,7 @@ import com.google.common.io.CharStreams;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.inject.Inject;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.twill.filesystem.Location;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -419,8 +420,6 @@ public class FileStreamAdmin implements StreamAdmin {
     try {
       // Grant All access to the stream created to the User
       privilegesManager.grant(streamId, authenticationContext.getPrincipal(), EnumSet.allOf(Action.class));
-      final Location streamLocation = impersonator.doAs(streamId, new Callable<Location>() {
-
       KerberosPrincipalId ownerPrincipal = null;
       if (properties.containsKey(Constants.Security.OWNER_PRINCIPAL)) {
         ownerPrincipal = GSON.fromJson(properties.getProperty(Constants.Security.OWNER_PRINCIPAL),

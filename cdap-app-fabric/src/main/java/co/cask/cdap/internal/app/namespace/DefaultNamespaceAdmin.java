@@ -40,6 +40,7 @@ import co.cask.cdap.proto.id.InstanceId;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.proto.security.Action;
 import co.cask.cdap.proto.security.Principal;
+import co.cask.cdap.security.impersonation.ImpersonationUtils;
 import co.cask.cdap.security.impersonation.Impersonator;
 import co.cask.cdap.security.spi.authentication.AuthenticationContext;
 import co.cask.cdap.security.spi.authorization.AuthorizationEnforcer;
@@ -177,9 +178,15 @@ public final class DefaultNamespaceAdmin implements NamespaceAdmin {
     // store the meta first in the namespace store because namespacedLocationFactory needs to look up location
     // mapping from namespace config
     nsStore.create(metadata);
-
+    UserGroupInformation ugi;
+    if (NamespaceId.DEFAULT.equals(namespace)) {
+      ugi = UserGroupInformation.getCurrentUser();
+    } else {
+      ugi = impersonator.getUGI(namespace);
+    }
     try {
-      impersonator.doAs(namespace, new Callable<Void>() {
+      LOG.info("nsquare: Creating {} as {}", namespace, ugi.getShortUserName());
+      ImpersonationUtils.doAs(ugi, new Callable<Void>() {
         @Override
         public Void call() throws Exception {
           storageProviderNamespaceAdmin.get().create(metadata);
