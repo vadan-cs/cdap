@@ -17,8 +17,13 @@
 package co.cask.cdap.logging.appender.kafka;
 
 import co.cask.cdap.common.conf.CConfiguration;
+import co.cask.cdap.common.logging.ApplicationLoggingContext;
+import co.cask.cdap.common.logging.LoggingContext;
+import co.cask.cdap.common.logging.NamespaceLoggingContext;
+import co.cask.cdap.logging.LoggingConfiguration;
 import co.cask.cdap.logging.appender.LogAppender;
 import co.cask.cdap.logging.appender.LogMessage;
+import co.cask.cdap.proto.id.NamespaceId;
 import com.google.inject.Inject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,8 +37,12 @@ public final class KafkaLogAppender extends LogAppender {
   private static final Logger LOG = LoggerFactory.getLogger(KafkaLogAppender.class);
 
   private static final String APPENDER_NAME = "KafkaLogAppender";
+  private static final String KAFKA_PARTITION_KEY_PROGRAM = "program";
+
   private final SimpleKafkaProducer producer;
   private final LoggingEventSerializer loggingEventSerializer;
+
+  private final CConfiguration cConf;
 
   private final AtomicBoolean stopped = new AtomicBoolean(false);
 
@@ -42,6 +51,7 @@ public final class KafkaLogAppender extends LogAppender {
     setName(APPENDER_NAME);
     addInfo("Initializing KafkaLogAppender...");
 
+    this.cConf = cConf;
     this.producer = new SimpleKafkaProducer(cConf);
     this.loggingEventSerializer = new LoggingEventSerializer();
     addInfo("Successfully initialized KafkaLogAppender.");
@@ -50,11 +60,25 @@ public final class KafkaLogAppender extends LogAppender {
   @Override
   protected void append(LogMessage logMessage) {
     try {
+      String partitionKey = getPartitionKey(logMessage.getLoggingContext());
       byte [] bytes = loggingEventSerializer.toBytes(logMessage.getLoggingEvent(), logMessage.getLoggingContext());
-      producer.publish(logMessage.getLoggingContext().getLogPartition(), bytes);
+      producer.publish(partitionKey, bytes);
     } catch (Throwable t) {
       LOG.error("Got exception while serializing log event {}.", logMessage.getLoggingEvent(), t);
     }
+  }
+
+  private String getPartitionKey(LoggingContext loggingContext) {
+    String namespaceId = loggingContext.getSystemTagsMap().get(NamespaceLoggingContext.TAG_NAMESPACE_ID).getValue();
+
+    if (cConf.get(LoggingConfiguration.KAFKA_PARTITION_KEY).equals(KAFKA_PARTITION_KEY_PROGRAM) ||
+      namespaceId.equals(NamespaceId.SYSTEM.getEntityName())) {
+      return loggingContext.getLogPartition();
+    }
+
+    String applicationId = loggingContext.getSystemTagsMap().get(ApplicationLoggingContext.TAG_APPLICATION_ID)
+      .getValue();
+    return String.format("%s:%s", namespaceId, applicationId);
   }
 
   @Override

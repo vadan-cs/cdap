@@ -51,8 +51,8 @@ public final class SimpleKafkaProducer {
     props.setProperty("request.required.acks", "1");
     props.setProperty("producer.type", cConf.get(LoggingConfiguration.KAFKA_PRODUCER_TYPE,
                        LoggingConfiguration.DEFAULT_KAFKA_PRODUCER_TYPE));
-    props.setProperty("queue.buffering.max.ms", cConf.get(LoggingConfiguration.KAFKA_PROCUDER_BUFFER_MS,
-                      Long.toString(LoggingConfiguration.DEFAULT_KAFKA_PROCUDER_BUFFER_MS)));
+    props.setProperty("queue.buffering.max.ms", cConf.get(LoggingConfiguration.KAFKA_PRODUCER_BUFFER_MS,
+                      Long.toString(LoggingConfiguration.DEFAULT_KAFKA_PRODUCER_BUFFER_MS)));
     props.setProperty(LoggingConfiguration.NUM_PARTITIONS, cConf.get(LoggingConfiguration.NUM_PARTITIONS,
                       LoggingConfiguration.DEFAULT_NUM_PARTITIONS));
 

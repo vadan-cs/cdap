@@ -1019,6 +1019,14 @@
   </property>
 
   <property>
+    <name>log.publish.kafka.partition.key</name>
+    <value>program</value>
+    <description>
+      Publish logs from a program or an app to same kafka partition. Valid values are "application" and "program"
+    </description>
+  </property>
+
+  <property>
     <name>log.retention.duration.days</name>
     <value>7</value>
     <description>
@@ -1068,7 +1076,7 @@
     </description>
   </property>
 
-
+  
   <!-- Master Configuration -->
 
   <property>
