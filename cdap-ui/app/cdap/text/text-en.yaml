@@ -475,6 +475,7 @@ features:
         classnameLabel: Class Name
         classnamePlaceholder: Driver Class Name
     Done: Done
+    GoToHomePage: Go to Home Page
     Informational:
       termsandconditions: Terms and Conditions
       Step1:
@@ -535,6 +536,8 @@ features:
         description: Specify the name of the pipeline.
       pipelinenameplaceholder: Pipeline Name
       headerlabel: Publish Pipeline
+      success: You have successfully created the pipeline
+      callToAction: Customize Pipeline
     HydratorPipeline:
       title: Create a Data Pipeline
       message: Choose the pipeline type you would like to create.

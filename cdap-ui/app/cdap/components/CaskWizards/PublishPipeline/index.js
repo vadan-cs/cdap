@@ -38,6 +38,7 @@ export default class PublishPipelineWizard extends Component {
       pipelineNameIsEmpty: false
     };
 
+    this.successInfo = {};
     this.setDefaultConfig();
 
     PublishPipelineWizardStore.subscribe(() => {
@@ -52,7 +53,26 @@ export default class PublishPipelineWizard extends Component {
     });
     this.eventEmitter = ee(ee);
   }
-
+  componentWillMount() {
+    let action = this.props.input.action;
+    let filename = head(action.arguments.filter(arg => arg.name === 'config')).value;
+    PublishPipelineActionCreator
+      .fetchPipelineConfig({
+        entityName: this.props.input.package.name,
+        entityVersion: this.props.input.package.version,
+        filename
+      });
+  }
+  componentWillReceiveProps({isOpen}) {
+    this.setState({
+      showWizard: isOpen
+    });
+  }
+  componentWillUnmount() {
+    PublishPipelineWizardStore.dispatch({
+      type: PublishPipelineAction.onReset
+    });
+  }
   setDefaultConfig() {
     const args = this.props.input.action.arguments || [];
 
@@ -66,24 +86,16 @@ export default class PublishPipelineWizard extends Component {
           break;
       }
     });
-
-    this.successInfo = {
-      message: 'You have successfully created the pipeline ',
-      buttonLabel: 'Customize Pipeline',
-      buttonUrl: '/hydrator/ns',
-      linkLabel: 'Go to Home Page',
-      linkUrl: "/cdap/ns"
-    };
   }
-  componentWillMount() {
-    let action = this.props.input.action;
-    let filename = head(action.arguments.filter(arg => arg.name === 'config')).value;
-    PublishPipelineActionCreator
-      .fetchPipelineConfig({
-        entityName: this.props.input.package.name,
-        entityVersion: this.props.input.package.version,
-        filename
-      });
+  buildSuccessInfo(name, draftId, namespace) {
+    let defaultSuccessMessage = T.translate('features.Wizard.PublishPipeline.success');
+    let buttonLabel = T.translate('features.Wizard.PublishPipeline.callToAction');
+    let linkLabel = T.translate('features.Wizard.GoToHomePage');
+    this.successInfo.message = `${defaultSuccessMessage} ${name}.`;
+    this.successInfo.buttonLabel = buttonLabel;
+    this.successInfo.buttonUrl = `/hydrator/ns/${namespace}/studio?draftId=${draftId}`;
+    this.successInfo.linkLabel = linkLabel;
+    this.successInfo.linkUrl = `/cdap/ns/${namespace}`;
   }
   toggleWizard(returnResult) {
     if (this.state.showWizard) {
@@ -93,21 +105,10 @@ export default class PublishPipelineWizard extends Component {
       showWizard: !this.state.showWizard
     });
   }
-  componentWillReceiveProps({isOpen}) {
-    this.setState({
-      showWizard: isOpen
-    });
-  }
-  componentWillUnmount() {
-    PublishPipelineWizardStore.dispatch({
-      type: PublishPipelineAction.onReset
-    });
-  }
   publishPipeline() {
     let action = this.props.input.action;
     let artifact = head(action.arguments.filter(arg => arg.name === 'artifact')).value;
     let {name, pipelineConfig} = PublishPipelineWizardStore.getState().pipelinemetadata;
-    this.successInfo.message += `"${name}".`;
     let draftConfig = {
       artifact,
       config: pipelineConfig,
@@ -121,8 +122,7 @@ export default class PublishPipelineWizard extends Component {
         .flatMap((res) => {
           let draftId = shortid.generate();
           draftConfig.__ui__.draftId = draftId;
-          this.successInfo.buttonUrl += `/${currentNamespace}/studio?draftId=${draftId}`;
-          this.successInfo.linkUrl += `/${currentNamespace}`;
+          this.buildSuccessInfo(name, draftId, currentNamespace);
           res = res || {};
           res.property = res.property || {};
           res.property.hydratorDrafts = res.property.hydratorDrafts || {};
@@ -147,15 +147,6 @@ export default class PublishPipelineWizard extends Component {
         )
         .map((res) => {
           this.eventEmitter.emit(globalEvents.PUBLISHPIPELINE);
-          // this.setState({
-          //   successInfo: {
-          //     message: "You have successfully created the pipeline",
-          //     buttonLabel: "Customize Pipeline",
-          //     buttonUrl: "",
-          //     linkLabel: "Go to Home Page",
-          //     linkUrl: ""
-          //   }
-          // });
           return res;
         });
     }
