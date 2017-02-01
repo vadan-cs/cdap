@@ -55,13 +55,13 @@ final class DeletedDatasetMetadataRemover {
     List<DatasetId> removedDatasets = new ArrayList<>();
     for (NamespaceMeta namespaceMeta : nsStore.list()) {
       Set<MetadataSearchResultRecord> searchResults =
-        metadataStore.search(namespaceMeta.getName(), "*", EnumSet.of(EntityTypeSimpleName.DATASET_INSTANCE),
+        metadataStore.search(namespaceMeta.getName(), "*", EnumSet.of(EntityTypeSimpleName.DATASET),
                              SortInfo.DEFAULT, 0, Integer.MAX_VALUE, 0, null, false).getResults();
       for (MetadataSearchResultRecord searchResult : searchResults) {
         NamespacedEntityId entityId = searchResult.getEntityId();
         Preconditions.checkState(entityId instanceof DatasetId,
                                  "Since search was filtered for %s, expected result to be a %s, but got a %s",
-                                 EntityTypeSimpleName.DATASET_INSTANCE, DatasetId.class.getSimpleName(),
+                                 EntityTypeSimpleName.DATASET, DatasetId.class.getSimpleName(),
                                  entityId.getClass().getName());
         DatasetId datasetInstance = (DatasetId) entityId;
         if (!dsFramework.hasInstance(datasetInstance)) {

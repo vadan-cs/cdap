@@ -947,7 +947,7 @@ public class MetadataHttpHandlerTestRun extends MetadataTestBase {
     Assert.assertEquals(ImmutableSet.of(new MetadataSearchResultRecord(appId)),
                         searchMetadata(namespace, "utag*", EntityTypeSimpleName.APP));
     Assert.assertEquals(ImmutableSet.of(new MetadataSearchResultRecord(datasetId)),
-                        searchMetadata(namespace, "utag*", EntityTypeSimpleName.DATASET_INSTANCE));
+                        searchMetadata(namespace, "utag*", EntityTypeSimpleName.DATASET));
 
     // Search for multiple target types
     Assert.assertEquals(ImmutableSet.of(
@@ -956,7 +956,7 @@ public class MetadataHttpHandlerTestRun extends MetadataTestBase {
                         ),
                         searchMetadata(namespace, "utag*",
                                        ImmutableSet.of(
-                                         EntityTypeSimpleName.DATASET_INSTANCE,
+                                         EntityTypeSimpleName.DATASET,
                                          EntityTypeSimpleName.STREAM
                                        )
                         ));
@@ -968,7 +968,7 @@ public class MetadataHttpHandlerTestRun extends MetadataTestBase {
                         searchMetadata(namespace, "utag*",
                                        ImmutableSet.of(
                                          EntityTypeSimpleName.APP,
-                                         EntityTypeSimpleName.DATASET_INSTANCE
+                                         EntityTypeSimpleName.DATASET
                                        )
                         ));
 
@@ -986,7 +986,7 @@ public class MetadataHttpHandlerTestRun extends MetadataTestBase {
                         ),
                         searchMetadata(namespace, "utag*",
                                        ImmutableSet.of(
-                                         EntityTypeSimpleName.DATASET_INSTANCE,
+                                         EntityTypeSimpleName.DATASET,
                                          EntityTypeSimpleName.ALL
                                        )
                         ));
@@ -1294,7 +1294,7 @@ public class MetadataHttpHandlerTestRun extends MetadataTestBase {
 
     // offset 1, limit 2, 2 cursors, should return just the dataset created above other than trackerDataset even
     // though it was created before since showHidden is false and it should not affect pagination
-    searchResponse = searchMetadata(namespace, "*", ImmutableSet.of(EntityTypeSimpleName.DATASET_INSTANCE),
+    searchResponse = searchMetadata(namespace, "*", ImmutableSet.of(EntityTypeSimpleName.DATASET),
                                     sort, 0, 2, 2, null);
     expectedResults = ImmutableList.of(new MetadataSearchResultRecord(mydataset));
     expectedCursors = ImmutableList.of();

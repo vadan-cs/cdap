@@ -50,7 +50,7 @@ public final class EntityIdKeyHelper {
       .put(WorkflowId.class, EntityTypeSimpleName.PROGRAM.getSerializedForm())
       .put(FlowId.class, EntityTypeSimpleName.PROGRAM.getSerializedForm())
       .put(ServiceId.class, EntityTypeSimpleName.PROGRAM.getSerializedForm())
-      .put(DatasetId.class, EntityTypeSimpleName.DATASET_INSTANCE.getSerializedForm())
+      .put(DatasetId.class, EntityTypeSimpleName.DATASET.getSerializedForm())
       .put(StreamId.class, EntityTypeSimpleName.STREAM.getSerializedForm())
       .put(StreamViewId.class, EntityTypeSimpleName.VIEW.getSerializedForm())
       .build();
