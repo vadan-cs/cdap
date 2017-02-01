@@ -66,6 +66,14 @@ export default class PublishPipelineWizard extends Component {
           break;
       }
     });
+
+    this.successInfo = {
+      message: 'You have successfully created the pipeline ',
+      buttonLabel: 'Customize Pipeline',
+      buttonUrl: '/hydrator/ns',
+      linkLabel: 'Go to Home Page',
+      linkUrl: "/cdap/ns"
+    };
   }
   componentWillMount() {
     let action = this.props.input.action;
@@ -99,6 +107,7 @@ export default class PublishPipelineWizard extends Component {
     let action = this.props.input.action;
     let artifact = head(action.arguments.filter(arg => arg.name === 'artifact')).value;
     let {name, pipelineConfig} = PublishPipelineWizardStore.getState().pipelinemetadata;
+    this.successInfo.message += `"${name}".`;
     let draftConfig = {
       artifact,
       config: pipelineConfig,
@@ -112,6 +121,8 @@ export default class PublishPipelineWizard extends Component {
         .flatMap((res) => {
           let draftId = shortid.generate();
           draftConfig.__ui__.draftId = draftId;
+          this.successInfo.buttonUrl += `/${currentNamespace}/studio?draftId=${draftId}`;
+          this.successInfo.linkUrl += `/${currentNamespace}`;
           res = res || {};
           res.property = res.property || {};
           res.property.hydratorDrafts = res.property.hydratorDrafts || {};
@@ -136,6 +147,15 @@ export default class PublishPipelineWizard extends Component {
         )
         .map((res) => {
           this.eventEmitter.emit(globalEvents.PUBLISHPIPELINE);
+          // this.setState({
+          //   successInfo: {
+          //     message: "You have successfully created the pipeline",
+          //     buttonLabel: "Customize Pipeline",
+          //     buttonUrl: "",
+          //     linkLabel: "Go to Home Page",
+          //     linkUrl: ""
+          //   }
+          // });
           return res;
         });
     }
@@ -159,6 +179,7 @@ export default class PublishPipelineWizard extends Component {
                 wizardConfig={PublishPipelineWizardConfig}
                 wizardType="PublishPipeline"
                 onSubmit={this.publishPipeline.bind(this)}
+                successInfo={this.successInfo}
                 onClose={this.toggleWizard.bind(this)}
                 store={PublishPipelineWizardStore}
                 finishButtonDisabled={this.state.pipelineNameIsEmpty}
