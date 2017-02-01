@@ -106,7 +106,7 @@ public class TestKafkaLogging extends KafkaTestBase {
   @Test
   public void testPartitionKey() throws Exception {
     CConfiguration cConf = KAFKA_TESTER.getCConf();
-    // set kafka partition key tp application
+    // set kafka partition key to application
     cConf.set(LoggingConfiguration.KAFKA_PARTITION_KEY, "application");
 
     Logger logger = LoggerFactory.getLogger("TestKafkaLogging");
@@ -116,6 +116,14 @@ public class TestKafkaLogging extends KafkaTestBase {
     for (int i = 0; i < 40; ++i) {
       logger.warn("TKL_NS_2 Test log message {} {} {}", i, "arg1", "arg2", new Exception("test exception"));
     }
+
+    loggingContext = new FlowletLoggingContext("TKL_NS_2", "APP_2", "FLOW_2", "FLOWLET_3",
+                                                              "RUN3", "INSTANCE3");
+    LoggingContextAccessor.setLoggingContext(loggingContext);
+    for (int i = 0; i < 40; ++i) {
+      logger.warn("TKL_NS_2 Test log message {} {} {}", i, "arg1", "arg2", new Exception("test exception"));
+    }
+
     final Multimap<Integer, String> actual = ArrayListMultimap.create();
 
     KAFKA_TESTER.getPublishedMessages(KAFKA_TESTER.getCConf().get(Constants.Logging.KAFKA_TOPIC),
@@ -134,8 +142,9 @@ public class TestKafkaLogging extends KafkaTestBase {
 
     boolean isPresent = false;
 
+    // check if all the logs from same app went to same partition
     for (Map.Entry<Integer, Collection<String>> entry : actual.asMap().entrySet()) {
-      if (entry.getValue().contains(loggingContext.getLogPartition())) {
+      if (entry.getValue().contains("TKL_NS_2:APP_2")) {
         if (!isPresent) {
           isPresent = true;
         } else {
