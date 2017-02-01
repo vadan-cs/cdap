@@ -30,6 +30,7 @@ import co.cask.cdap.data2.util.hbase.ColumnFamilyDescriptorBuilder;
 import co.cask.cdap.data2.util.hbase.CoprocessorManager;
 import co.cask.cdap.data2.util.hbase.HBaseTableUtil;
 import co.cask.cdap.data2.util.hbase.TableDescriptorBuilder;
+import co.cask.cdap.internal.guava.reflect.TypeToken;
 import co.cask.cdap.proto.id.NamespaceId;
 import co.cask.cdap.spi.hbase.ColumnFamilyDescriptor;
 import co.cask.cdap.spi.hbase.HBaseDDLExecutor;
@@ -44,6 +45,7 @@ import org.apache.twill.filesystem.Location;
 import org.apache.twill.filesystem.LocationFactory;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -126,6 +128,11 @@ public class HBaseTableAdmin extends AbstractHBaseDataSetAdmin implements Updata
 
     try (HBaseDDLExecutor ddlExecutor = ddlExecutorFactory.get()) {
       ddlExecutor.createTableIfNotExists(tdBuilder.build(), splits);
+      if (spec.getProperty(TableProperties.PROPERTY_TABLE_PERMISSIONS) != null) {
+        Map<String, String> privileges = GSON.fromJson(spec.getProperty(TableProperties.PROPERTY_TABLE_PERMISSIONS),
+                                                       new TypeToken<Map<String, String>>() { }.getType());
+        tableUtil.grantPrivileges(ddlExecutor, tableId, privileges);
+      }
     }
   }
 

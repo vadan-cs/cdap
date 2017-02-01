@@ -498,6 +498,12 @@ public abstract class HBaseTableUtil {
     ddlExecutor.truncateTable(tableName.getNamespaceAsString(), tableName.getQualifierAsString());
   }
 
+  public void grantPrivileges(HBaseDDLExecutor ddlExecutor, TableId tableId,
+                              Map<String, String> privileges) throws IOException {
+    TableName tableName = HTableNameConverter.toTableName(getTablePrefix(cConf), tableId);
+    ddlExecutor.grantPermissions(tableName.getNamespaceAsString(), tableName.getQualifierAsString(), privileges);
+  }
+
   /**
    * Creates a {@link ScanBuilder}.
    */

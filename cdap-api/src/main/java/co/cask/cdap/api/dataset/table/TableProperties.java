@@ -16,6 +16,7 @@
 
 package co.cask.cdap.api.dataset.table;
 
+import co.cask.cdap.api.annotation.Beta;
 import co.cask.cdap.api.common.Bytes;
 import co.cask.cdap.api.data.schema.Schema;
 import co.cask.cdap.api.dataset.DatasetProperties;
@@ -32,6 +33,16 @@ import javax.annotation.Nullable;
 public class TableProperties {
 
   private static final byte[] DEFAULT_COLUMN_FAMILY_BYTES = Bytes.toBytes(Table.DEFAULT_COLUMN_FAMILY);
+
+  /**
+   * Set the ACLs that should be granted for this table. The value must be a map from user name to
+   * a permission string that consists of the letters 'r', 'w', 'c', 'x', and 'a'. To grant a privilege
+   * to a group, prefix the group name with the character '@'. For example, the mapping
+   * "{ 'joe': 'RW', '@admins': 'RWCXA' }" grants only read and write privileges to the user joe, but
+   * grants all privileges to members of the admins group.
+   */
+  @Beta
+  public static final String PROPERTY_TABLE_PERMISSIONS = "dataset.table.permissions.grants";
 
   /**
    * Set a conflict detection level in dataset properties.
