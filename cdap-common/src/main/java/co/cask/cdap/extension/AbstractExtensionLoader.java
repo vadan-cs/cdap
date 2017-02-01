@@ -128,9 +128,9 @@ public abstract class AbstractExtensionLoader<EXTENSION_TYPE, EXTENSION> {
       }
 
       // Each module would be under a directory of the extension directory
-      List<File> dirs = DirUtils.listFiles(extDir);
-      Collections.sort(dirs);
-      for (File moduleDir : dirs) {
+      List<File> files = new ArrayList<>(DirUtils.listFiles(extDir));
+      Collections.sort(files);
+      for (File moduleDir : files) {
         if (!moduleDir.isDirectory()) {
           continue;
         }
@@ -195,7 +195,9 @@ public abstract class AbstractExtensionLoader<EXTENSION_TYPE, EXTENSION> {
       }
 
       // Each module would be under a directory of the extension directory
-      for (File moduleDir : DirUtils.listFiles(extDir)) {
+      List<File> files = new ArrayList<>(DirUtils.listFiles(extDir));
+      Collections.sort(files);
+      for (File moduleDir : files) {
         if (!moduleDir.isDirectory()) {
           continue;
         }
